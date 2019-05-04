@@ -1,0 +1,250 @@
+// This code is essentially the same as the asynchronous websocket server example from the boost::beast documentation.
+// See https://www.boost.org/doc/libs/1_70_0/libs/beast/example/websocket/server/async/websocket_server_async.cpp
+
+// Third-party
+#include <boost/beast/core.hpp>
+#include <boost/beast/websocket.hpp>
+#include <boost/asio/strand.hpp>
+
+// Standard library
+#include <algorithm>
+#include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+
+namespace beast = boost::beast;         // from <boost/beast.hpp>
+namespace http = beast::http;           // from <boost/beast/http.hpp>
+namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
+using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
+
+//------------------------------------------------------------------------------
+const std::string programName( "smartnode-server" );
+
+// Report a failure
+void fail( beast::error_code ec, char const* what )
+{
+    std::cerr << what << ": " << ec.message() << "\n";
+}
+
+// Echoes back all received WebSocket messages
+class session : public std::enable_shared_from_this<session>
+{
+    websocket::stream<beast::tcp_stream> ws_;
+    beast::multi_buffer buffer_;
+
+public:
+    // Take ownership of the socket
+    explicit
+        session( tcp::socket&& socket )
+        : ws_( std::move( socket ) )
+    {
+    }
+
+    // Start the asynchronous operation
+    void run()
+    {
+        // Set suggested timeout settings for the websocket
+        ws_.set_option(
+            websocket::stream_base::timeout::suggested(
+                beast::role_type::server ) );
+
+        // Set a decorator to change the Server of the handshake
+        ws_.set_option( websocket::stream_base::decorator(
+            []( websocket::response_type & res )
+            {
+                res.set( http::field::server,
+                    std::string( BOOST_BEAST_VERSION_STRING ) +
+                    " " + programName );
+            } ) );
+
+        // Accept the websocket handshake
+        ws_.async_accept(
+            beast::bind_front_handler(
+                &session::on_accept,
+                shared_from_this() ) );
+    }
+
+    void on_accept( beast::error_code ec )
+    {
+        if( ec )
+        {
+            return fail( ec, "accept" );
+        }
+
+        // Read a message
+        do_read();
+    }
+
+    void do_read()
+    {
+        // Read a message into our buffer
+        ws_.async_read(
+            buffer_,
+            beast::bind_front_handler(
+                &session::on_read,
+                shared_from_this() ) );
+    }
+
+    void on_read(
+        beast::error_code ec,
+        std::size_t bytes_transferred )
+    {
+        // This indicates that the session was closed
+        if( ec == websocket::error::closed )
+        {
+            std::cout << ws_.next_layer().socket().remote_endpoint().address() << ":" << ws_.next_layer().socket().remote_endpoint().port() << " disconnected.\n";
+            
+            return;
+        }
+        else if( ec )
+        {
+            fail( ec, "read" );
+        }
+
+        std::cout << "Received " << bytes_transferred << " bytes: " << beast::make_printable( buffer_.data() ) << "\n";
+
+        // Echo the message
+        ws_.text( ws_.got_text() );
+        ws_.async_write(
+            buffer_.data(),
+            beast::bind_front_handler(
+                &session::on_write,
+                shared_from_this() ) );
+    }
+
+    void on_write(
+        const beast::error_code& ec,
+        std::size_t bytes_transferred )
+    {
+        boost::ignore_unused( bytes_transferred );
+
+        if( ec )
+        {
+            return fail( ec, "write" );
+        }
+
+        // Clear the buffer
+        buffer_.consume( buffer_.size() );
+
+        // Do another read
+        do_read();
+    }
+};
+
+//------------------------------------------------------------------------------
+
+// Accepts incoming connections and launches the sessions
+class listener : public std::enable_shared_from_this<listener>
+{
+    boost::asio::io_context& ioc_;
+    tcp::acceptor acceptor_;
+
+public:
+    listener(
+        boost::asio::io_context& ioc,
+        tcp::endpoint endpoint )
+        : ioc_( ioc )
+        , acceptor_( ioc )
+    {
+        beast::error_code ec;
+
+        // Open the acceptor
+        acceptor_.open( endpoint.protocol(), ec );
+        if( ec )
+        {
+            fail( ec, "open" );
+            return;
+        }
+
+        // Allow address reuse
+        acceptor_.set_option( boost::asio::socket_base::reuse_address( true ), ec );
+        if( ec )
+        {
+            fail( ec, "set_option" );
+            return;
+        }
+
+        // Bind to the server address
+        acceptor_.bind( endpoint, ec );
+        if( ec )
+        {
+            fail( ec, "bind" );
+            return;
+        }
+
+        // Start listening for connections
+        acceptor_.listen(
+            boost::asio::socket_base::max_listen_connections, ec );
+        if( ec )
+        {
+            fail( ec, "listen" );
+            return;
+        }
+    }
+
+    // Start accepting incoming connections
+    void run()
+    {
+        do_accept();
+    }
+
+private:
+    void do_accept()
+    {
+        // The new connection gets its own strand
+        acceptor_.async_accept(
+            boost::asio::make_strand( ioc_ ),
+            beast::bind_front_handler(
+                &listener::on_accept,
+                shared_from_this() ) );
+    }
+
+    void on_accept( beast::error_code ec, tcp::socket socket )
+    {
+        if( ec )
+        {
+            fail( ec, "accept" );
+        }
+        else
+        {
+            std::cout << "New connection from " << socket.remote_endpoint().address() << ":" << socket.remote_endpoint().port()
+                << " bound to " << socket.local_endpoint().address() << ":" << socket.local_endpoint().port() << "\n";
+
+            // Create the session and run it
+            std::make_shared<session>( std::move( socket ) )->run();
+        }
+
+        // Accept another connection
+        do_accept();
+    }
+};
+
+//------------------------------------------------------------------------------
+
+int main( int argc, char* argv[] )
+{
+    // Check command line arguments.
+    if( argc != 3 )
+    {
+        std::cerr << "Usage: " << programName << " <address> <port>\n"
+            << "Example:\n"
+            << "    " << programName << "127.0.0.1 8080\n";
+        return EXIT_FAILURE;
+    }
+    auto const address = boost::asio::ip::make_address( argv[1] );
+    auto const port = static_cast<unsigned short>(std::atoi( argv[2] ));
+
+    // The io_context is required for all I/O
+    boost::asio::io_context ioc{};
+
+    // Create and launch a listening port
+    std::make_shared<listener>( ioc, tcp::endpoint{ address, port } )->run();
+
+    // Run the I/O service on a single thread
+    ioc.run();
+
+    return EXIT_SUCCESS;
+}

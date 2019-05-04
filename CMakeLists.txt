@@ -1,0 +1,31 @@
+cmake_minimum_required(VERSION 3.14)
+
+project(SmartNodeServer
+        VERSION 0.1.0
+        DESCRIPTION "Websocket server for SmartNodes and SmartNode UIs"
+        HOMEPAGE_URL "https://github.com/PhantomGrazzler/SmartNodeServer"
+        LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Let Conan do it's magic.
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup(TARGETS)
+
+# Options to add compiler warning flags, and turn on warnings as errors
+if(MSVC)
+    add_compile_options(/W4 /WX)
+else()
+    add_compile_options(-Wall -Wextra -pedantic -Werror)
+endif()
+
+# Main application executable
+add_executable(smartnode-server)
+target_sources(smartnode-server
+    PRIVATE src/main.cpp)
+target_link_libraries(smartnode-server
+    PRIVATE CONAN_PKG::boost)
+
+
