@@ -17,7 +17,7 @@ matrix:
           env:
             - CMAKE_COMPILER=clang++
             - CONAN_COMPILER=clang
-            - CONAN_COMPILER_VERSION=7
+            - CONAN_COMPILER_VERSION=7.0
 
 install:
 
