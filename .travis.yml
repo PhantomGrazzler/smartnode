@@ -1,9 +1,18 @@
-os: linux
 language: python
 python: "3.7"
-dist: xenial
-compiler:
-    - gcc
+
+matrix:
+    include:
+        - os: linux
+          dist: xenial
+          compiler: gcc
+          env: COMPILER=g++
+
+        - os: linux
+          dist: xenial
+          compiler: clang
+          env: COMPILER=clang++
+
 install:
 
     # Install conan
@@ -11,7 +20,8 @@ install:
     # Automatic detection of your arch, compiler, etc.
     - conan user
 
-    # Install updated CMake
+    # Install CMake v3.14.3
+    # Taken from https://riptutorial.com/cmake/example/4723/configure-travis-ci-with-newest-cmake
     # first we create a directory for the CMake binaries
     - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
     - mkdir ${DEPS_DIR} && cd ${DEPS_DIR}
@@ -27,11 +37,12 @@ install:
     - PATH=${DEPS_DIR}/cmake-install:${DEPS_DIR}/cmake-install/bin:$PATH
     # don't forget to switch back to the main build directory once you are done
     - cd ${TRAVIS_BUILD_DIR}
+
 script:
     - mkdir build
     - cd build
     # Download dependencies and build project
     - conan install .. -s build_type=Debug
     # Call your build system
-    - cmake .. -G "Unix Makefiles"
+    - cmake -DCMAKE_CXX_COMPILER=${COMPILER} ..
     - cmake --build . --config Debug
