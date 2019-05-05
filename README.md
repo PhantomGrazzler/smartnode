@@ -1,4 +1,7 @@
 # SmartNodeServer
+
+[![Build Status](https://travis-ci.com/PhantomGrazzler/SmartNodeServer.svg?branch=master)](https://travis-ci.com/PhantomGrazzler/SmartNodeServer)
+
 C++ websocket server for SmartNodes written using boost::beast.
 
 ## Building SmartNodeServer
