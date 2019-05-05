@@ -9,6 +9,7 @@ matrix:
           env:
             - CMAKE_COMPILER=g++
             - CONAN_COMPILER=gcc
+            - CONAN_COMPILER_VERSION=5
 
         - os: linux
           dist: xenial
@@ -16,6 +17,7 @@ matrix:
           env:
             - CMAKE_COMPILER=clang++
             - CONAN_COMPILER=clang
+            - CONAN_COMPILER_VERSION=7
 
 install:
 
@@ -46,7 +48,7 @@ script:
     - mkdir build
     - cd build
     # Download dependencies and build project
-    - conan install .. -s build_type=Debug -s compiler=${CONAN_COMPILER} -s compiler.libcxx=libstdc++
+    - conan install .. -s build_type=Debug -s compiler=${CONAN_COMPILER} -s compiler.libcxx=libstdc++ -s compiler.version=${CONAN_COMPILER_VERSION}
     # Call your build system
     - cmake -DCMAKE_CXX_COMPILER=${CMAKE_COMPILER} ..
     - cmake --build . --config Debug
