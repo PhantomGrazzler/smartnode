@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.12)
 
 project(SmartNodeServer
         VERSION 0.1.0
@@ -23,9 +23,14 @@ endif()
 
 # Main application executable
 add_executable(smartnode-server)
+target_include_directories(smartnode-server
+    PRIVATE
+        include)
 target_sources(smartnode-server
-    PRIVATE src/main.cpp)
+    PRIVATE
+        src/main.cpp
+        src/Listener.cpp
+        src/Session.cpp
+        src/FailPrinters.cpp)
 target_link_libraries(smartnode-server
     PRIVATE CONAN_PKG::boost)
-
-
