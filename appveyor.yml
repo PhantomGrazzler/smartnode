@@ -9,15 +9,15 @@ configuration:
   - Debug
 
 install:
-    - cmmd: echo "Downloading conan..."
-    - cmmd: set PATH=%PATH%;%PYTHON%/Scripts/
-    - cmmd: pip.exe install conan
-    - cmmd: conan user # Create the conan data directory
-    - cmmd: conan --version
+    - cmd: echo "Downloading conan..."
+    - cmd: set PATH=%PATH%;%PYTHON%/Scripts/
+    - cmd: pip.exe install conan
+    - cmd: conan user # Create the conan data directory
+    - cmd: conan --version
 
 build_script:
-    - cmmd: mkdir build
-    - cmmd: conan install . -s build_type=Debug
-    - cmmd: cd build
-    - cmmd: cmake -G "Visual Studio 16 2019" -A x64 ..
-    - cmmd: cmake --build . --config Debug
+    - cmd: mkdir build
+    - cmd: conan install . -s build_type=Debug
+    - cmd: cd build
+    - cmd: cmake -G "Visual Studio 16 2019" -A x64 ..
+    - cmd: cmake --build . --config Debug
