@@ -17,8 +17,8 @@ install:
 
 build_script:
     - cmd: mkdir build
-    - cmd: conan install . -s build_type=Debug
     - cmd: cd build
     - cmd: cd # Print the current working directory
+    - cmd: conan install .. -s build_type=Debug
     - cmd: cmake -G "Visual Studio 16 2019" -A x64 ..
     - cmd: cmake --build . --config Debug
