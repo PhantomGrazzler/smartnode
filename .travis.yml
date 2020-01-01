@@ -4,15 +4,15 @@ python: "3.7"
 matrix:
     include:
         - os: linux
-          dist: xenial
+          dist: bionic
           compiler: gcc
           env:
             - CMAKE_COMPILER=g++
             - CONAN_COMPILER=gcc
-            - CONAN_COMPILER_VERSION=5
+            - CONAN_COMPILER_VERSION=7
 
         - os: linux
-          dist: xenial
+          dist: bionic
           compiler: clang
           env:
             - CMAKE_COMPILER=clang++
