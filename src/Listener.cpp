@@ -6,6 +6,7 @@
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
+#include <rang.hpp>
 
 // Standard library
 #include <iostream>
@@ -17,10 +18,12 @@ namespace sns
 Listener::Listener(
     boost::asio::io_context& ioc,
     boost::asio::ip::tcp::endpoint endpoint,
-    const std::string& serverName )
+    const std::string& serverName,
+    const std::shared_ptr<MessageEngine>& pMsgEngine )
     : m_ioc( ioc )
     , m_acceptor( ioc )
     , m_serverName( serverName )
+    , m_pMsgEngine( pMsgEngine )
 {
     boost::beast::error_code ec;
 
@@ -83,11 +86,12 @@ void Listener::OnAccept(
     }
     else
     {
-        std::cout << "New connection from " << socket.remote_endpoint().address() << ":" << socket.remote_endpoint().port()
-            << " bound to " << socket.local_endpoint().address() << ":" << socket.local_endpoint().port() << "\n";
+        std::cout << rang::fg::cyan << "New connection from " << socket.remote_endpoint().address() << ":"
+            << socket.remote_endpoint().port() << " bound to " << socket.local_endpoint().address() << ":"
+            << socket.local_endpoint().port() << rang::fg::reset << "\n";
 
         // Create the session and run it
-        std::make_shared<Session>( std::move( socket ), m_serverName )->Run();
+        std::make_shared<Session>( std::move( socket ), m_serverName, m_pMsgEngine )->Run();
     }
 
     // Accept another connection

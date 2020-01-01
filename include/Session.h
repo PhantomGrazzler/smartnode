@@ -11,13 +11,16 @@
 namespace sns
 {
 
+class MessageEngine;
+
 class Session : public std::enable_shared_from_this<Session>
 {
 public:
     // Take ownership of the socket
     explicit Session(
         boost::asio::ip::tcp::socket&& socket,
-        const std::string& serverName);
+        const std::string& serverName,
+        const std::shared_ptr<MessageEngine>& pMsgEngine );
 
     // Start the asynchronous operation
     void Run();
@@ -30,14 +33,13 @@ public:
         boost::beast::error_code ec,
         std::size_t bytes_transferred );
 
-    void OnWrite(
-        const boost::beast::error_code& ec,
-        std::size_t bytes_transferred );
-
 private:
     boost::beast::websocket::stream<boost::beast::tcp_stream> m_ws;
     boost::beast::multi_buffer m_buffer;
     const std::string m_serverName;
+    const std::shared_ptr<MessageEngine> m_pMsgEngine;
+    boost::asio::ip::address m_peerAddress;
+    unsigned short m_peerPort;
 };
 
 } 

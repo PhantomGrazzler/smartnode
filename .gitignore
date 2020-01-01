@@ -33,3 +33,6 @@
 
 # Ignore the out of source build directory
 build/
+
+# Ignore the local to do list
+TODO.txt

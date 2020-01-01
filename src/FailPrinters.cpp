@@ -1,6 +1,9 @@
 
 #include "FailPrinters.h"
 
+// Third-party
+#include <rang.hpp>
+
 // Standard library
 #include <iostream>
 
@@ -12,7 +15,7 @@ void fail(
     const boost::beast::error_code& ec,
     char const* what )
 {
-    std::cerr << what << ": " << ec.message() << "\n";
+    std::cerr << rang::fg::red << what << ": " << ec.message() << rang::fg::reset << '\n' ;
 }
 
 }
