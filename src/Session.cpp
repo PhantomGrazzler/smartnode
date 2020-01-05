@@ -1,5 +1,10 @@
 #include "Session.h"
 #include "FailPrinters.h"
+#include "MessageEngine.h"
+
+// Third-party
+#include <nlohmann/json.hpp>
+#include <rang.hpp>
 
 // Standard library
 #include <iostream>
@@ -9,10 +14,14 @@ namespace sns
 
 Session::Session(
     boost::asio::ip::tcp::socket&& socket,
-    const std::string& serverName )
+    const std::string& serverName,
+    const std::shared_ptr<MessageEngine>& pMsgEngine )
     : m_ws( std::move( socket ) )
     , m_buffer()
-    , m_serverName(serverName)
+    , m_serverName( serverName )
+    , m_pMsgEngine( pMsgEngine )
+    , m_peerAddress()
+    , m_peerPort()
 {
     // Nothing to do here.
 }
@@ -41,12 +50,26 @@ void Session::Run()
             shared_from_this() ) );
 }
 
+void Session::SendMessage( const std::string& message )
+{
+    boost::beast::error_code ec;
+    m_ws.write( boost::asio::buffer( message ), ec );
+
+    if( ec )
+    {
+        std::cerr << rang::fg::red << "Failed to write message:\n" << message << rang::fg::reset << "\n\n";
+    }
+}
+
 void Session::OnAccept( boost::beast::error_code ec )
 {
     if( ec )
     {
         return fail( ec, "OnAccept" );
     }
+
+    m_peerAddress = m_ws.next_layer().socket().remote_endpoint().address();
+    m_peerPort = m_ws.next_layer().socket().remote_endpoint().port();
 
     // Read a message
     DoRead();
@@ -69,9 +92,7 @@ void Session::OnRead(
     // This indicates that the session was closed
     if( ec == boost::beast::websocket::error::closed )
     {
-        // TODO_IZG: Figure out why this throws an exception on disconnect
-        //
-        // std::cout << m_ws.next_layer().socket().remote_endpoint().address() << ":" << m_ws.next_layer().socket().remote_endpoint().port() << " disconnected.\n";
+        std::cout << rang::fg::cyan << m_peerAddress << ":" << m_peerPort << " disconnected.\n" << rang::fg::reset;
 
         return;
     }
@@ -80,32 +101,16 @@ void Session::OnRead(
         fail( ec, "read" );
     }
 
-    std::cout << "Received " << bytes_transferred << " bytes: " << boost::beast::make_printable( m_buffer.data() ) << "\n";
+    std::cout << rang::fg::cyan << "Received " << bytes_transferred << " bytes\n" << rang::fg::reset;
 
-    // Echo the message
-    m_ws.text( m_ws.got_text() );
-    m_ws.async_write(
-        m_buffer.data(),
-        boost::beast::bind_front_handler(
-            &Session::OnWrite,
-            shared_from_this() ) );
-}
-
-void Session::OnWrite(
-    const boost::beast::error_code& ec,
-    std::size_t bytes_transferred )
-{
-    boost::ignore_unused( bytes_transferred );
-
-    if( ec )
-    {
-        return fail( ec, "write" );
-    }
+    std::stringstream ss;
+    ss << boost::beast::make_printable( m_buffer.data() );
+    m_pMsgEngine->MessageReceived( weak_from_this(), ss.str() );
 
     // Clear the buffer
     m_buffer.consume( m_buffer.size() );
 
-    // Do another read
+    // Queue up another read
     DoRead();
 }
 
