@@ -50,6 +50,17 @@ void Session::Run()
             shared_from_this() ) );
 }
 
+void Session::SendMessage( const std::string& message )
+{
+    boost::beast::error_code ec;
+    m_ws.write( boost::asio::buffer( message ), ec );
+
+    if( ec )
+    {
+        std::cerr << rang::fg::red << "Failed to write message:\n" << message << rang::fg::reset << "\n\n";
+    }
+}
+
 void Session::OnAccept( boost::beast::error_code ec )
 {
     if( ec )

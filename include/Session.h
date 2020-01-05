@@ -25,6 +25,13 @@ public:
     // Start the asynchronous operation
     void Run();
 
+    /*!
+        @brief Synchronously send the provided message to the remote peer.
+        @param[in] message The message to be sent to the remote peer.
+     */
+    void SendMessage( const std::string& message );
+
+private:
     void OnAccept( boost::beast::error_code ec );
 
     void DoRead();

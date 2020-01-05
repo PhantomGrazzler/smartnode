@@ -20,6 +20,9 @@ const std::string programName( "smartnode-server" );
 
 int main( int argc, char* argv[] )
 {
+    std::string addressStr;
+    std::string portStr;
+
     // Check command line arguments.
     if( argc != 3 )
     {
@@ -29,13 +32,18 @@ int main( int argc, char* argv[] )
             << "    " << programName << " 127.0.0.1 8080\n\n";
 
         std::cerr << rang::fg::yellow << "Starting assuming server address of 127.0.0.1 and port 8080.\n\n" << rang::fg::reset;
-        argv[1] = "127.0.0.1";
-        argv[2] = "8080";
+        addressStr = "127.0.0.1";
+        portStr = "8080";
+    }
+    else
+    {
+        addressStr = argv[1];
+        portStr = argv[2];
     }
 
     boost::system::error_code ec;
-    auto const address = boost::asio::ip::make_address( argv[1], ec );
-    auto const port = static_cast<unsigned short>(std::atoi( argv[2] ));
+    auto const address = boost::asio::ip::make_address( addressStr, ec );
+    auto const port = static_cast<unsigned short>( std::atoi( portStr.c_str() ) );
 
     if( ec )
     {

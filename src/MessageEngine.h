@@ -26,24 +26,30 @@ public:
 
 private: // methods
     /*!
-        @brief Adds a new connection to one of the collections of active connections, if not already present.
+        @brief Adds a new connection to one of the collections of active connections, if not already present. Will also
+               remove any expired UI sessions.
+        @param[in] pSession Weak pointer to the new session.
+        @param[in] id The unique ID of the UI that is connecting.
      */
     void AddConnection(
         std::weak_ptr<Session>&& pSession,
         const UIId id );
 
     /*!
-        @brief Adds a new connection to one of the collections of active connections, if not already present.
+        @brief Adds a new connection to one of the collections of active connections, if not already present. Will also
+               remove any expired Node sessions.
+        @param[in] pSession Weak pointer to the new session.
+        @param[in] id The unique ID of the Node that is connecting.
      */
     void AddConnection(
         std::weak_ptr<Session>&& pSession,
         const NodeId id );
 
     /*!
-        @brief Removes expired sessions from the provided container.
+        @brief Synchronously forwards the provided message to all connected UIs.
+        @param[in] message The message to be forwarded.
      */
-    template<typename T>
-    void RemoveExpiredSessions( T& container );
+    void ForwardMessageToUIs( const std::string& message );
 
 private: // data
     std::set<Connection<UIId>>      m_uiConnections;

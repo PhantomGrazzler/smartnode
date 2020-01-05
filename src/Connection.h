@@ -7,26 +7,13 @@ namespace sns
 
 class Session;
 
-template <
+enum class UIId : uint32_t {};
+enum class NodeId : uint32_t {};
+
+template<
     typename T,
-    typename Parameter,
     typename = std::enable_if<std::is_integral_v<T>>
 >
-class NamedType
-{
-public:
-    explicit NamedType( T const& value ) : value_( value ) {}
-    T const& get() const { return value_; }
-    bool operator<( const NamedType& rhs ) const { return value_ < rhs.value_; }
-    bool operator==( const NamedType& rhs ) const { return value_ == rhs.value_; }
-private:
-    T value_;
-};
-
-using UIId = NamedType<uint32_t, struct UIIdParameter>;
-using NodeId = NamedType<uint32_t, struct NodeIdParameter>;
-
-template<typename T>
 class Connection final
 {
 public:
@@ -43,11 +30,6 @@ public:
     bool operator<( const Connection& rhs ) const
     {
         return m_id < rhs.m_id;
-    }
-
-    bool operator==( const Connection& rhs ) const
-    {
-        return m_id == rhs.m_id && m_pSession == rhs.m_pSession;
     }
 
 private:

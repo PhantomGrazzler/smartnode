@@ -1,5 +1,6 @@
 
 #include "MessageEngine.h"
+#include "Session.h"
 
 // Third-party
 #include <nlohmann/json.hpp>
@@ -7,6 +8,26 @@
 
 namespace sns
 {
+
+/*!
+    @brief Removes any expired sessions from the provided container.
+ */
+template<typename T>
+void RemoveExpiredSessions( T& container )
+{
+    auto it = container.begin();
+    while( it != container.end() )
+    {
+        if( (*it).Session().expired() )
+        {
+            it = container.erase( it );
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
 
 void MessageEngine::MessageReceived(
     std::weak_ptr<Session>&& pSession,
@@ -29,6 +50,8 @@ void MessageEngine::MessageReceived(
             const auto& id = msg.at( "NodeId" );
             std::cout << "Node ID is " << id << "\n\n";
             AddConnection( std::move( pSession ), NodeId( id ) );
+
+            ForwardMessageToUIs( message );
         }
     }
     catch( const nlohmann::json::exception & e )
@@ -48,7 +71,7 @@ void MessageEngine::AddConnection(
     std::cout << "UI Connections:\n";
     for( const auto& connection : m_uiConnections )
     {
-        std::cout << connection.Id().get() << "\n";
+        std::cout << static_cast<uint32_t>( connection.Id() ) << "\n";
     }
 }
 
@@ -62,23 +85,18 @@ void MessageEngine::AddConnection(
     std::cout << "Node Connections:\n";
     for( const auto& connection : m_nodeConnections )
     {
-        std::cout << connection.Id().get() << "\n";
+        std::cout << static_cast<uint32_t>( connection.Id() ) << "\n";
     }
 }
 
-template<typename T>
-void MessageEngine::RemoveExpiredSessions( T& container )
+void MessageEngine::ForwardMessageToUIs( const std::string& message )
 {
-    auto it = container.begin();
-    while( it != container.end() )
+    for( const auto& connection : m_uiConnections )
     {
-        if( (*it).Session().expired() )
+        const auto pSession = connection.Session().lock();
+        if( pSession )
         {
-            it = container.erase( it );
-        }
-        else
-        {
-            ++it;
+            pSession->SendMessage( message );
         }
     }
 }
