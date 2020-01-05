@@ -10,7 +10,7 @@ matrix:
             - CMAKE_COMPILER=g++
             - CONAN_COMPILER=gcc
             - CONAN_COMPILER_VERSION=7
-            - CONAN_LIBCXX=libstdc++
+            - CONAN_LIBCXX=libstdc++11
 
         - os: linux
           dist: bionic
