@@ -57,7 +57,7 @@ void MessageEngine::MessageReceived(
     catch( const nlohmann::json::exception & e )
     {
         std::cout << rang::fg::yellow << "Failed to parse incoming message.\n" << e.what() << rang::fg::reset << '\n';
-        std::cout << rang::fg::blue << "Message: \n" << message << rang::fg::reset << "\n\n";
+        std::cout << rang::fg::green << "Message: \n" << message << rang::fg::reset << "\n\n";
     }
 }
 
