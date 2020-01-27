@@ -30,6 +30,7 @@ add_executable(smartnode-server)
 
 target_include_directories(smartnode-server
     PRIVATE include
+            src
     )
 
 target_sources(smartnode-server
