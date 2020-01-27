@@ -61,6 +61,11 @@ void Session::SendMessage( const std::string& message )
     }
 }
 
+std::variant<UIId, NodeId> Session::GetPeerId() const
+{
+    return m_peerId;
+}
+
 void Session::OnAccept( boost::beast::error_code ec )
 {
     if( ec )
@@ -93,6 +98,7 @@ void Session::OnRead(
     if( ec == boost::beast::websocket::error::closed )
     {
         std::cout << rang::fg::cyan << m_peerAddress << ":" << m_peerPort << " disconnected.\n" << rang::fg::reset;
+        m_pMsgEngine->PeerDisconnected( shared_from_this() );
 
         return;
     }

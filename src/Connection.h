@@ -1,3 +1,4 @@
+#pragma once
 
 #include <memory>
 #include <type_traits>
@@ -6,9 +7,6 @@ namespace sns
 {
 
 class Session;
-
-enum class UIId : uint32_t {};
-enum class NodeId : uint32_t {};
 
 template<
     typename T,

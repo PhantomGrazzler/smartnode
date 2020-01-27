@@ -1,3 +1,4 @@
+#pragma once
 
 // Third-party
 #include <boost/beast/core/error.hpp>

@@ -1,3 +1,4 @@
+#pragma once
 
 #include "Connection.h"
 
@@ -9,6 +10,8 @@ namespace sns
 {
 
 class Session;
+enum class UIId;
+enum class NodeId;
 
 class MessageEngine final
 {
@@ -23,6 +26,12 @@ public:
     void MessageReceived(
         std::weak_ptr<Session>&& pSession,
         const std::string& message );
+
+    /*!
+        @brief TODO
+     */
+    void PeerDisconnected(
+        std::weak_ptr<Session>&& pSession );
 
 private: // methods
     /*!
@@ -50,6 +59,11 @@ private: // methods
         @param[in] message The message to be forwarded.
      */
     void ForwardMessageToUIs( const std::string& message );
+
+    /*!
+        @brief Prints all the active UI and Node connections to the console.
+     */
+    void PrintConnections() const;
 
 private: // data
     std::set<Connection<UIId>>      m_uiConnections;
