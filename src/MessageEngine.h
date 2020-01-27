@@ -1,5 +1,5 @@
+#pragma once
 
-#include "PeerIdTypes.hpp"
 #include "Connection.h"
 
 #include <set>
@@ -10,6 +10,8 @@ namespace sns
 {
 
 class Session;
+enum class UIId;
+enum class NodeId;
 
 class MessageEngine final
 {
@@ -57,6 +59,11 @@ private: // methods
         @param[in] message The message to be forwarded.
      */
     void ForwardMessageToUIs( const std::string& message );
+
+    /*!
+        @brief Prints all the active UI and Node connections to the console.
+     */
+    void PrintConnections() const;
 
 private: // data
     std::set<Connection<UIId>>      m_uiConnections;

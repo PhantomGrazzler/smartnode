@@ -1,5 +1,7 @@
 // This contains a list of all message types that this server can process.
 
+#pragma once
+
 #include <string>
 #include <vector>
 

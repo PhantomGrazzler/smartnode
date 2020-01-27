@@ -1,16 +1,22 @@
 
 #include "MessageEngine.h"
 #include "Session.h"
+#include "PeerIdTypes.hpp"
 
 // Third-party
 #include <nlohmann/json.hpp>
 #include <rang.hpp>
+
+// Standard library
+#include <variant>
+#include <set>
 
 namespace sns
 {
 
 /*!
     @brief Removes any expired sessions from the provided container.
+    @param[in] container The container from which to remove expired sessions.
  */
 template<typename T>
 void RemoveExpiredSessions( T& container )
@@ -29,6 +35,20 @@ void RemoveExpiredSessions( T& container )
     }
 }
 
+template<typename T, typename U>
+void RemoveDisconnectedPeer(T& container, const U id)
+{
+    for ( const auto& element : container )
+    {
+        if ( element.Id() == id )
+        {
+            container.erase( element );
+            std::cout << rang::fg::cyan << "Peer with " << id << " disconnected.\n" << rang::fg::reset;
+            return;
+        }
+    }
+}
+
 void MessageEngine::MessageReceived(
     std::weak_ptr<Session>&& pSession,
     const std::string& message )
@@ -41,17 +61,17 @@ void MessageEngine::MessageReceived(
 
         if( msgType == "ui_connect" )
         {
-            const auto& id = msg.at( "UIId" );
-            std::cout << "UI ID is " << id << "\n\n";
+            const UIId& id = msg.at( "UIId" );
+            std::cout << id << " connected" << "\n\n";
             pSession.lock()->SetPeerId( id );
-            AddConnection( std::move( pSession ), UIId( id ) );
+            AddConnection( std::move( pSession ), id );
         }
         else if( msgType == "node_connect" )
         {
-            const auto& id = msg.at( "NodeId" );
-            std::cout << "Node ID is " << id << "\n\n";
+            const NodeId& id = msg.at( "NodeId" );
+            std::cout << id << " connected" << "\n\n";
             pSession.lock()->SetPeerId( id );
-            AddConnection( std::move( pSession ), NodeId( id ) );
+            AddConnection( std::move( pSession ), id );
 
             ForwardMessageToUIs( message );
         }
@@ -66,8 +86,38 @@ void MessageEngine::MessageReceived(
 void MessageEngine::PeerDisconnected( std::weak_ptr<Session>&& pSession )
 {
     const auto pLockedSession = pSession.lock();
+    if ( pLockedSession )
+    {
+        const auto peerId = pLockedSession->GetPeerId();
 
-    
+        if ( std::holds_alternative<UIId>( peerId ) )
+        {
+            const auto id = std::get<UIId>( peerId );
+            RemoveDisconnectedPeer( m_uiConnections, id );
+        }
+        else if ( std::holds_alternative<NodeId>( peerId ) )
+        {
+            const auto id = std::get<NodeId>( peerId );
+            RemoveDisconnectedPeer( m_nodeConnections, id );
+        }
+    }
+
+    PrintConnections();
+}
+
+void MessageEngine::PrintConnections() const
+{
+    std::cout << "Connections:\n";
+
+    for ( const auto& connection : m_uiConnections )
+    {
+        std::cout << connection.Id() << "\n";
+    }
+
+    for ( const auto& connection : m_nodeConnections )
+    {
+        std::cout << connection.Id() << "\n";
+    }
 }
 
 void MessageEngine::AddConnection(
@@ -77,11 +127,7 @@ void MessageEngine::AddConnection(
     RemoveExpiredSessions( m_uiConnections );
     m_uiConnections.emplace( id, std::move( pSession ) );
 
-    std::cout << "UI Connections:\n";
-    for( const auto& connection : m_uiConnections )
-    {
-        std::cout << static_cast<uint32_t>( connection.Id() ) << "\n";
-    }
+    PrintConnections();
 }
 
 void MessageEngine::AddConnection(
@@ -91,11 +137,7 @@ void MessageEngine::AddConnection(
     RemoveExpiredSessions( m_nodeConnections );
     m_nodeConnections.emplace( id, std::move( pSession ) );
 
-    std::cout << "Node Connections:\n";
-    for( const auto& connection : m_nodeConnections )
-    {
-        std::cout << static_cast<uint32_t>( connection.Id() ) << "\n";
-    }
+    PrintConnections();
 }
 
 void MessageEngine::ForwardMessageToUIs( const std::string& message )
