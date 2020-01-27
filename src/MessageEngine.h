@@ -1,4 +1,5 @@
 
+#include "PeerIdTypes.hpp"
 #include "Connection.h"
 
 #include <set>
@@ -23,6 +24,12 @@ public:
     void MessageReceived(
         std::weak_ptr<Session>&& pSession,
         const std::string& message );
+
+    /*!
+        @brief TODO
+     */
+    void PeerDisconnected(
+        std::weak_ptr<Session>&& pSession );
 
 private: // methods
     /*!

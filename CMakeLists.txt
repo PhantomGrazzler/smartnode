@@ -45,6 +45,7 @@ target_sources(smartnode-server
             src/FailPrinters.cpp
             src/MessageEngine.h
             src/MessageEngine.cpp
+            src/PeerIdTypes.hpp
     )
 
 target_link_libraries(smartnode-server

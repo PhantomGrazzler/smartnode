@@ -43,12 +43,14 @@ void MessageEngine::MessageReceived(
         {
             const auto& id = msg.at( "UIId" );
             std::cout << "UI ID is " << id << "\n\n";
+            pSession.lock()->SetPeerId( id );
             AddConnection( std::move( pSession ), UIId( id ) );
         }
         else if( msgType == "node_connect" )
         {
             const auto& id = msg.at( "NodeId" );
             std::cout << "Node ID is " << id << "\n\n";
+            pSession.lock()->SetPeerId( id );
             AddConnection( std::move( pSession ), NodeId( id ) );
 
             ForwardMessageToUIs( message );
@@ -59,6 +61,13 @@ void MessageEngine::MessageReceived(
         std::cout << rang::fg::yellow << "Failed to parse incoming message.\n" << e.what() << rang::fg::reset << '\n';
         std::cout << rang::fg::blue << "Message: \n" << message << rang::fg::reset << "\n\n";
     }
+}
+
+void MessageEngine::PeerDisconnected( std::weak_ptr<Session>&& pSession )
+{
+    const auto pLockedSession = pSession.lock();
+
+    
 }
 
 void MessageEngine::AddConnection(

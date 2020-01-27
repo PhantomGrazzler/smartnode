@@ -61,6 +61,12 @@ void Session::SendMessage( const std::string& message )
     }
 }
 
+template<typename T>
+void Session::SetPeerId( const T id )
+{
+    m_peerId = id;
+}
+
 void Session::OnAccept( boost::beast::error_code ec )
 {
     if( ec )
