@@ -1,17 +1,13 @@
-#include "Session.h"
-#include "Listener.h"
-#include "FailPrinters.h"
-#include "MessageEngine.h"
+#include "Session.hpp"
+#include "Listener.hpp"
+#include "ConsolePrinter.hpp"
+#include "MessageEngine.hpp"
 
-// Third-party
 #include <boost/beast/core.hpp>
 #include <boost/asio/ip/address.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <rang.hpp>
 
-// Standard library
 #include <cstdlib>
-#include <iostream>
 #include <memory>
 #include <string>
 
@@ -26,12 +22,13 @@ int main( int argc, char* argv[] )
     // Check command line arguments.
     if( argc != 3 )
     {
-        std::cerr << rang::fg::yellow << "\nProvided " << (argc - 1) << " arguments, expected 2.\n\n";
-        std::cerr << rang::fg::reset << "Usage: " << programName << " <address> <port>\n"
-            << "Example:\n"
-            << "    " << programName << " 127.0.0.1 8080\n\n";
+        sns::PrintWarning( "\nProvided ", (argc - 1), " arguments, expected 2.");
+        sns::PrintWarning( "Starting assuming server address of 127.0.0.1 and port 8080." );
+        sns::PrintInfo(
+            "\nUsage: ", programName, " <address> <port>\n", 
+            "Example:\n",
+            "    ", programName, " 127.0.0.1 8080\n");
 
-        std::cerr << rang::fg::yellow << "Starting assuming server address of 127.0.0.1 and port 8080.\n\n" << rang::fg::reset;
         addressStr = "127.0.0.1";
         portStr = "8080";
     }
@@ -47,7 +44,7 @@ int main( int argc, char* argv[] )
 
     if( ec )
     {
-        sns::fail( ec, "Failed to parse address" );
+        sns::PrintError( "Failed to parse address: ", ec.message() );
         return EXIT_FAILURE;
     }
 
@@ -60,7 +57,7 @@ int main( int argc, char* argv[] )
     std::make_shared<sns::Listener>( ioc, boost::asio::ip::tcp::endpoint{ address, port }, programName, pMsgEngine )->Run();
 
     // Run the I/O service on a single thread
-    std::cout << rang::fg::cyan << "Starting websocket server on " << address << ":" << port << '\n' << rang::fg::reset;
+    sns::PrintInfo( "Starting websocket server on ", address, ':', port, '\n' );
     ioc.run();
 
     return EXIT_SUCCESS;

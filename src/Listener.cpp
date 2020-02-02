@@ -1,14 +1,11 @@
-#include "Listener.h"
-#include "Session.h"
-#include "FailPrinters.h"
+#include "Listener.hpp"
+#include "Session.hpp"
+#include "ConsolePrinter.hpp"
 
-// Third-party
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
-#include <rang.hpp>
 
-// Standard library
 #include <iostream>
 #include <memory>
 
@@ -31,7 +28,7 @@ Listener::Listener(
     m_acceptor.open( endpoint.protocol(), ec );
     if( ec )
     {
-        fail( ec, "open" );
+        PrintError( "open: ", ec.message() );
         return;
     }
 
@@ -39,7 +36,7 @@ Listener::Listener(
     m_acceptor.set_option( boost::asio::socket_base::reuse_address( true ), ec );
     if( ec )
     {
-        fail( ec, "set_option" );
+        PrintError( "set_option: ", ec.message() );
         return;
     }
 
@@ -47,7 +44,7 @@ Listener::Listener(
     m_acceptor.bind( endpoint, ec );
     if( ec )
     {
-        fail( ec, "bind" );
+        PrintError( "bind: ", ec.message() );
         return;
     }
 
@@ -56,7 +53,7 @@ Listener::Listener(
         boost::asio::socket_base::max_listen_connections, ec );
     if( ec )
     {
-        fail( ec, "listen" );
+        PrintError( "listen: ", ec.message() );
         return;
     }
 }
@@ -82,13 +79,16 @@ void Listener::OnAccept(
 {
     if( ec )
     {
-        fail( ec, "accept" );
+        PrintError( "OnAccept: ", ec.message() );
     }
     else
     {
-        std::cout << rang::fg::cyan << "New connection from " << socket.remote_endpoint().address() << ":"
-            << socket.remote_endpoint().port() << " bound to " << socket.local_endpoint().address() << ":"
-            << socket.local_endpoint().port() << rang::fg::reset << "\n";
+        PrintInfo( "New connection from ",
+            socket.remote_endpoint().address(), ':',
+            socket.remote_endpoint().port(),
+            " bound to ",
+            socket.local_endpoint().address(), ':',
+            socket.local_endpoint().port() );
 
         // Create the session and run it
         std::make_shared<Session>( std::move( socket ), m_serverName, m_pMsgEngine )->Run();

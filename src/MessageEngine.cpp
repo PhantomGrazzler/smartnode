@@ -1,11 +1,10 @@
-
-#include "MessageEngine.h"
-#include "Session.h"
+#include "MessageEngine.hpp"
+#include "Session.hpp"
 #include "PeerIdTypes.hpp"
+#include "ConsolePrinter.hpp"
 
 // Third-party
 #include <nlohmann/json.hpp>
-#include <rang.hpp>
 
 // Standard library
 #include <variant>
@@ -43,7 +42,7 @@ void RemoveDisconnectedPeer(T& container, const U id)
         if ( element.Id() == id )
         {
             container.erase( element );
-            std::cout << rang::fg::cyan << "Peer with " << id << " disconnected.\n" << rang::fg::reset;
+            PrintInfo( "Peer ", id, " disconnected." );
             return;
         }
     }
@@ -57,19 +56,19 @@ void MessageEngine::MessageReceived(
     {
         const nlohmann::json msg = nlohmann::json::parse( message );
         const auto& msgType = msg.at( "MsgType" );
-        std::cout << "Message Type is " << msgType << "\n";
+        PrintDebug( "Message Type is ", msgType );
 
         if( msgType == "ui_connect" )
         {
             const UIId& id = msg.at( "UIId" );
-            std::cout << id << " connected" << "\n\n";
+            PrintInfo( id, " connected" );
             pSession.lock()->SetPeerId( id );
             AddConnection( std::move( pSession ), id );
         }
         else if( msgType == "node_connect" )
         {
             const NodeId& id = msg.at( "NodeId" );
-            std::cout << id << " connected" << "\n\n";
+            PrintInfo( id, " connected" );
             pSession.lock()->SetPeerId( id );
             AddConnection( std::move( pSession ), id );
 
@@ -78,8 +77,8 @@ void MessageEngine::MessageReceived(
     }
     catch( const nlohmann::json::exception & e )
     {
-        std::cout << rang::fg::yellow << "Failed to parse incoming message.\n" << e.what() << rang::fg::reset << '\n';
-        std::cout << rang::fg::green << "Message: \n" << message << rang::fg::reset << "\n\n";
+        PrintWarning( "Failed to parse incoming message: ", e.what() );
+        PrintDebug( "Message: \n", message );
     }
 }
 
@@ -105,19 +104,27 @@ void MessageEngine::PeerDisconnected( std::weak_ptr<Session>&& pSession )
     PrintConnections();
 }
 
+template<typename T>
+void PrintContainer(
+    std::ostringstream& oss,
+    const T& container,
+    const std::string& prefix,
+    const char suffix )
+{
+    for (const auto& item : container)
+    {
+        oss << prefix << item.Id() << suffix;
+    }
+}
+
 void MessageEngine::PrintConnections() const
 {
-    std::cout << "Connections:\n";
+    std::ostringstream oss;
 
-    for ( const auto& connection : m_uiConnections )
-    {
-        std::cout << connection.Id() << "\n";
-    }
+    PrintContainer( oss, m_uiConnections, "  ", '\n' );
+    PrintContainer( oss, m_nodeConnections, "  ", '\n' );
 
-    for ( const auto& connection : m_nodeConnections )
-    {
-        std::cout << connection.Id() << "\n";
-    }
+    PrintInfo( "Connections:\n", oss.str() );
 }
 
 void MessageEngine::AddConnection(
