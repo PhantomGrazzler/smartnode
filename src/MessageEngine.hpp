@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Connection.h"
+#include "Connection.hpp"
 
 #include <set>
 #include <memory>
@@ -28,7 +28,8 @@ public:
         const std::string& message );
 
     /*!
-        @brief TODO
+        @brief Indicates that the supplied peer has disconnected from the server.
+        @param[in] pSession The session that is now disconnected.
      */
     void PeerDisconnected(
         std::weak_ptr<Session>&& pSession );

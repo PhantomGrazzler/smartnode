@@ -1,12 +1,9 @@
-#include "Session.h"
-#include "FailPrinters.h"
-#include "MessageEngine.h"
+#include "Session.hpp"
+#include "ConsolePrinter.hpp"
+#include "MessageEngine.hpp"
 
-// Third-party
 #include <nlohmann/json.hpp>
-#include <rang.hpp>
 
-// Standard library
 #include <iostream>
 
 namespace sns
@@ -57,7 +54,7 @@ void Session::SendMessage( const std::string& message )
 
     if( ec )
     {
-        std::cerr << rang::fg::red << "Failed to write message:\n" << message << rang::fg::reset << "\n\n";
+        PrintError( "Failed to write message:\n", message, "\n\n" );
     }
 }
 
@@ -70,7 +67,7 @@ void Session::OnAccept( boost::beast::error_code ec )
 {
     if( ec )
     {
-        return fail( ec, "OnAccept" );
+        return PrintError( "OnAccept: ", ec.message() );
     }
 
     m_peerAddress = m_ws.next_layer().socket().remote_endpoint().address();
@@ -97,17 +94,16 @@ void Session::OnRead(
     // This indicates that the session was closed
     if( ec == boost::beast::websocket::error::closed )
     {
-        std::cout << rang::fg::cyan << m_peerAddress << ":" << m_peerPort << " disconnected.\n" << rang::fg::reset;
         m_pMsgEngine->PeerDisconnected( shared_from_this() );
 
-        return;
+        return PrintInfo( m_peerAddress, ":", m_peerPort, " disconnected.\n" );;
     }
     else if( ec )
     {
-        fail( ec, "read" );
+        PrintError( "OnRead", ec.message() );
     }
 
-    std::cout << rang::fg::cyan << "Received " << bytes_transferred << " bytes\n" << rang::fg::reset;
+    PrintInfo( "Received ", bytes_transferred, " bytes\n" );
 
     std::stringstream ss;
     ss << boost::beast::make_printable( m_buffer.data() );

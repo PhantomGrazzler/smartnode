@@ -34,17 +34,15 @@ target_include_directories(smartnode-server
     )
 
 target_sources(smartnode-server
-    PRIVATE include/Listener.h
-            include/Session.h
-            include/FailPrinters.h
+    PRIVATE include/Listener.hpp
+            include/Session.hpp
 
-            src/Connection.h
-            src/MessageTypes.h
+            src/Connection.hpp
+            src/ConsolePrinter.hpp
             src/main.cpp
             src/Listener.cpp
             src/Session.cpp
-            src/FailPrinters.cpp
-            src/MessageEngine.h
+            src/MessageEngine.hpp
             src/MessageEngine.cpp
             src/PeerIdTypes.hpp
     )

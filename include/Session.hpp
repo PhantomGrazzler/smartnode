@@ -3,13 +3,11 @@
 
 #pragma once
 
-#include "Connection.h"
+#include "Connection.hpp"
 
-// Third-party
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
 
-// Standard library
 #include <memory>
 #include <variant>
 

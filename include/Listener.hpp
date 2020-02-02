@@ -23,6 +23,9 @@ public:
         const std::string& serverName,
         const std::shared_ptr<MessageEngine>& pMsgEngine );
 
+    // TODO: Move binding and listening from the constructor
+    void Listen();
+
     // Start accepting incoming connections
     void Run();
 
