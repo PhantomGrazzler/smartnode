@@ -1,10 +1,8 @@
 #pragma once
 
-// Third-party
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core/error.hpp>
 
-// Standard library
 #include <memory>
 #include <string>
 
@@ -19,14 +17,19 @@ class Listener : public std::enable_shared_from_this<Listener>
 public:
     Listener(
         boost::asio::io_context& ioc,
-        boost::asio::ip::tcp::endpoint endpoint,
         const std::string& serverName,
         const std::shared_ptr<MessageEngine>& pMsgEngine );
 
-    // TODO: Move binding and listening from the constructor
-    void Listen();
+    /*!
+        @brief Start listening for incoming connections on the provided
+               endpoint.
+        @param[in] endpoint The endpoint to listen on.
+     */
+    void Listen( const boost::asio::ip::tcp::endpoint& endpoint );
 
-    // Start accepting incoming connections
+    /*!
+        @brief Start accepting incoming connections.
+     */
     void Run();
 
 private: // methods
