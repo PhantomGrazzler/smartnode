@@ -48,15 +48,16 @@ int main( int argc, char* argv[] )
         return EXIT_FAILURE;
     }
 
-    const auto pMsgEngine = std::make_shared<sns::MessageEngine>();
-
     // The io_context is required for all I/O
-    boost::asio::io_context ioc{};
+    boost::asio::io_context ioc;
 
     // Create and launch a listening port
-    std::make_shared<sns::Listener>( ioc, boost::asio::ip::tcp::endpoint{ address, port }, programName, pMsgEngine )->Run();
+    const auto pListener = std::make_shared<sns::Listener>(
+        ioc, programName, std::make_shared<sns::MessageEngine>() );
+    pListener->Listen( boost::asio::ip::tcp::endpoint{ address, port } );
+    pListener->Run();
 
-    // Run the I/O service on a single thread
+    // Run the I/O service on a single thread (this one).
     sns::PrintInfo( "Starting websocket server on ", address, ':', port, '\n' );
     ioc.run();
 

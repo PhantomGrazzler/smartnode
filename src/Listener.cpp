@@ -14,7 +14,6 @@ namespace sns
 
 Listener::Listener(
     boost::asio::io_context& ioc,
-    boost::asio::ip::tcp::endpoint endpoint,
     const std::string& serverName,
     const std::shared_ptr<MessageEngine>& pMsgEngine )
     : m_ioc( ioc )
@@ -22,39 +21,41 @@ Listener::Listener(
     , m_serverName( serverName )
     , m_pMsgEngine( pMsgEngine )
 {
+}
+
+void Listener::Listen(
+    const boost::asio::ip::tcp::endpoint& endpoint )
+{
     boost::beast::error_code ec;
 
     // Open the acceptor
     m_acceptor.open( endpoint.protocol(), ec );
-    if( ec )
+    if ( ec )
     {
-        PrintError( "open: ", ec.message() );
-        return;
+        return PrintError( "open: ", ec.message() );
     }
 
     // Allow address reuse
-    m_acceptor.set_option( boost::asio::socket_base::reuse_address( true ), ec );
-    if( ec )
+    m_acceptor.set_option(
+        boost::asio::socket_base::reuse_address( true ), ec );
+    if ( ec )
     {
-        PrintError( "set_option: ", ec.message() );
-        return;
+        return PrintError( "set_option: ", ec.message() );
     }
 
     // Bind to the server address
     m_acceptor.bind( endpoint, ec );
-    if( ec )
+    if ( ec )
     {
-        PrintError( "bind: ", ec.message() );
-        return;
+        return PrintError( "bind: ", ec.message() );
     }
 
     // Start listening for connections
     m_acceptor.listen(
         boost::asio::socket_base::max_listen_connections, ec );
-    if( ec )
+    if ( ec )
     {
-        PrintError( "listen: ", ec.message() );
-        return;
+        return PrintError( "listen: ", ec.message() );
     }
 }
 
