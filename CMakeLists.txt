@@ -14,7 +14,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
 
-# Options to add compiler warning flags, and turn on warnings as errors
+# Options to add compiler warning flags, and turn on warnings as errors.
 if(MSVC)
     add_compile_options(/W4 /WX)
     add_compile_definitions(
@@ -25,7 +25,10 @@ else()
     add_compile_options(-Wall -Wextra -pedantic -Werror)
 endif()
 
-# Main application executable
+# Copy editorconfig into the build directory so that IDEs will use those settings.
+configure_file(.editorconfig .editorconfig COPYONLY)
+
+# Main application executable.
 add_executable(smartnode-server)
 
 target_include_directories(smartnode-server
