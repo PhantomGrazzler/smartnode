@@ -1,6 +1,3 @@
-// This code is essentially the same as the asynchronous websocket server example from the boost::beast documentation.
-// See https://www.boost.org/doc/libs/1_70_0/libs/beast/example/websocket/server/async/websocket_server_async.cpp
-
 #pragma once
 
 #include "Connection.hpp"
@@ -47,6 +44,11 @@ public:
         @brief Returns the ID of the remote peer.
      */
     std::variant<UIId, NodeId> GetPeerId() const;
+
+    /*!
+        @brief Returns the ID of the remote peer as a string.
+     */
+    std::string PeerIdAsString() const;
 
 private:
     void OnAccept( boost::beast::error_code ec );

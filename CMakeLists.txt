@@ -48,6 +48,7 @@ target_sources(smartnode-server
             src/MessageEngine.hpp
             src/MessageEngine.cpp
             src/PeerIdTypes.hpp
+            src/PeerIdTypes.cpp
     )
 
 target_link_libraries(smartnode-server

@@ -35,6 +35,9 @@ public:
         std::weak_ptr<Session>&& pSession );
 
 private: // methods
+    bool PeerAlreadyConnected(
+        const std::shared_ptr<Session>& pSession ) const;
+
     /*!
         @brief Adds a new connection to one of the collections of active connections, if not already present. Will also
                remove any expired UI sessions.
