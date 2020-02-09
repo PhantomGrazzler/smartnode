@@ -14,6 +14,22 @@ namespace sns
 {
 
 /*!
+    @brief Builds an error message with the provided error message.
+    @param[in] errorMsg The error message to include in the response.
+ */
+std::string BuildErrorResponse( const std::string& errorMsg )
+{
+    nlohmann::json errorResp;
+
+    errorResp["MsgType"] = "error";
+    errorResp["ErrorMsg"] = errorMsg;
+
+    return errorResp.dump( 2 );
+}
+
+const auto alreadyConnectedResponse = BuildErrorResponse( "Already connected with a different ID." );
+
+/*!
     @brief Removes any expired sessions from the provided container.
     @param[in] container The container from which to remove expired sessions.
  */
@@ -89,7 +105,8 @@ void MessageEngine::MessageReceived(
 
             if ( PeerAlreadyConnected( pLockedSession ) )
             {
-                // TODO: Respond with error.
+                pLockedSession->SendMessage( alreadyConnectedResponse );
+
                 PrintWarning( pLockedSession->PeerIdAsString(), " attempting to connect as ", id );
             }
             else
@@ -106,7 +123,8 @@ void MessageEngine::MessageReceived(
 
             if ( PeerAlreadyConnected( pLockedSession ) )
             {
-                // TODO: Respond with error.
+                pLockedSession->SendMessage( alreadyConnectedResponse );
+
                 PrintWarning( pLockedSession->PeerIdAsString(), " attempting to connect as ", id );
             }
             else

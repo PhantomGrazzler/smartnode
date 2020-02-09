@@ -124,7 +124,7 @@ void Session::OnRead(
         PrintError( "OnRead", ec.message() );
     }
 
-    PrintInfo( "Received ", bytes_transferred, " bytes" );
+    PrintDebug( "Received ", bytes_transferred, " bytes" );
 
     std::stringstream ss;
     ss << boost::beast::make_printable( m_buffer.data() );

@@ -35,6 +35,11 @@ public:
         std::weak_ptr<Session>&& pSession );
 
 private: // methods
+    /*!
+        @brief Returns true if the provided session represents a peer that has already
+               sent a connect message (either UI or node).
+        @param[in] pSession The session to test.
+     */
     bool PeerAlreadyConnected(
         const std::shared_ptr<Session>& pSession ) const;
 
