@@ -6,7 +6,6 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
 
-#include <iostream>
 #include <memory>
 
 namespace sns

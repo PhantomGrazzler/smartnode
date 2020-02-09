@@ -14,6 +14,22 @@ namespace sns
 {
 
 /*!
+    @brief Builds an error message with the provided error message.
+    @param[in] errorMsg The error message to include in the response.
+ */
+std::string BuildErrorResponse( const std::string& errorMsg )
+{
+    nlohmann::json errorResp;
+
+    errorResp["MsgType"] = "error";
+    errorResp["ErrorMsg"] = errorMsg;
+
+    return errorResp.dump( 2 );
+}
+
+const auto alreadyConnectedResponse = BuildErrorResponse( "Already connected with a different ID." );
+
+/*!
     @brief Removes any expired sessions from the provided container.
     @param[in] container The container from which to remove expired sessions.
  */
@@ -48,6 +64,25 @@ void RemoveDisconnectedPeer(T& container, const U id)
     }
 }
 
+template<typename T>
+bool SessionInContainer(
+    const std::shared_ptr<Session>& pSession,
+    const T& container )
+{
+    return std::find_if( container.cbegin(), container.cend(),
+        [&pSession]( const auto& connection )
+        {
+            return connection.Session().lock() == pSession;
+        } ) != container.cend();
+}
+
+bool MessageEngine::PeerAlreadyConnected(
+    const std::shared_ptr<Session>& pSession ) const
+{
+    return SessionInContainer( pSession, m_uiConnections ) ||
+        SessionInContainer( pSession, m_nodeConnections );
+}
+
 void MessageEngine::MessageReceived(
     std::weak_ptr<Session>&& pSession,
     const std::string& message )
@@ -57,22 +92,49 @@ void MessageEngine::MessageReceived(
         const nlohmann::json msg = nlohmann::json::parse( message );
         const auto& msgType = msg.at( "MsgType" );
         PrintDebug( "Message Type is ", msgType );
+        const auto pLockedSession = pSession.lock();
+
+        if ( pLockedSession == nullptr )
+        {
+            return;
+        }
 
         if( msgType == "ui_connect" )
         {
             const UIId& id = msg.at( "UIId" );
-            PrintInfo( id, " connected" );
-            pSession.lock()->SetPeerId( id );
-            AddConnection( std::move( pSession ), id );
+
+            if ( PeerAlreadyConnected( pLockedSession ) )
+            {
+                pLockedSession->SendMessage( alreadyConnectedResponse );
+
+                PrintWarning( pLockedSession->PeerIdAsString(), " attempting to connect as ", id );
+            }
+            else
+            {
+                pLockedSession->SetPeerId( id );
+                AddConnection( std::move( pSession ), id );
+
+                PrintInfo( id, " connected" );
+            }
         }
         else if( msgType == "node_connect" )
         {
             const NodeId& id = msg.at( "NodeId" );
-            PrintInfo( id, " connected" );
-            pSession.lock()->SetPeerId( id );
-            AddConnection( std::move( pSession ), id );
 
-            ForwardMessageToUIs( message );
+            if ( PeerAlreadyConnected( pLockedSession ) )
+            {
+                pLockedSession->SendMessage( alreadyConnectedResponse );
+
+                PrintWarning( pLockedSession->PeerIdAsString(), " attempting to connect as ", id );
+            }
+            else
+            {
+                pLockedSession->SetPeerId( id );
+                AddConnection( std::move( pSession ), id );
+                PrintInfo( id, " connected" );
+
+                ForwardMessageToUIs( message );
+            }
         }
     }
     catch( const nlohmann::json::exception & e )

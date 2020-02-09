@@ -36,6 +36,14 @@ public:
 
 private: // methods
     /*!
+        @brief Returns true if the provided session represents a peer that has already
+               sent a connect message (either UI or node).
+        @param[in] pSession The session to test.
+     */
+    bool PeerAlreadyConnected(
+        const std::shared_ptr<Session>& pSession ) const;
+
+    /*!
         @brief Adds a new connection to one of the collections of active connections, if not already present. Will also
                remove any expired UI sessions.
         @param[in] pSession Weak pointer to the new session.

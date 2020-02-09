@@ -1,6 +1,7 @@
 #include "Session.hpp"
 #include "ConsolePrinter.hpp"
 #include "MessageEngine.hpp"
+#include "PeerIdTypes.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -63,6 +64,26 @@ std::variant<UIId, NodeId> Session::GetPeerId() const
     return m_peerId;
 }
 
+std::string Session::PeerIdAsString() const
+{
+    std::ostringstream oss;
+
+    if ( std::holds_alternative<UIId>( m_peerId ) )
+    {
+        oss << std::get<UIId>( m_peerId );
+        return oss.str();
+    }
+    else if ( std::holds_alternative<NodeId>( m_peerId ) )
+    {
+        oss << std::get<NodeId>( m_peerId );
+        return oss.str();
+    }
+    else
+    {
+        return "[No peer ID set]";
+    }
+}
+
 void Session::OnAccept( boost::beast::error_code ec )
 {
     if( ec )
@@ -103,7 +124,7 @@ void Session::OnRead(
         PrintError( "OnRead", ec.message() );
     }
 
-    PrintInfo( "Received ", bytes_transferred, " bytes" );
+    PrintDebug( "Received ", bytes_transferred, " bytes" );
 
     std::stringstream ss;
     ss << boost::beast::make_printable( m_buffer.data() );
