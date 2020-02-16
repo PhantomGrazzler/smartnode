@@ -20,14 +20,16 @@ int main( int argc, char* argv[] )
     std::string portStr;
 
     // Check command line arguments.
-    if( argc != 3 )
+    if ( argc != 3 )
     {
-        sns::PrintWarning( "\nProvided ", (argc - 1), " arguments, expected 2.");
+        sns::PrintWarning( "\nProvided ", ( argc - 1 ), " arguments, expected 2." );
         sns::PrintWarning( "Starting assuming server address of 127.0.0.1 and port 8080." );
+        // clang-format off
         sns::PrintInfo(
-            "\nUsage: ", programName, " <address> <port>\n", 
+            "\nUsage: ", programName, " <address> <port>\n",
             "Example:\n",
-            "    ", programName, " 127.0.0.1 8080\n");
+            "    ", programName, " 127.0.0.1 8080\n" );
+        // clang-format on
 
         addressStr = "127.0.0.1";
         portStr = "8080";
@@ -42,7 +44,7 @@ int main( int argc, char* argv[] )
     auto const address = boost::asio::ip::make_address( addressStr, ec );
     auto const port = static_cast<unsigned short>( std::atoi( portStr.c_str() ) );
 
-    if( ec )
+    if ( ec )
     {
         sns::PrintError( "Failed to parse address: ", ec.message() );
         return EXIT_FAILURE;
@@ -52,8 +54,8 @@ int main( int argc, char* argv[] )
     boost::asio::io_context ioc;
 
     // Create and launch a listening port
-    const auto pListener = std::make_shared<sns::Listener>(
-        ioc, programName, std::make_shared<sns::MessageEngine>() );
+    const auto pListener =
+        std::make_shared<sns::Listener>( ioc, programName, std::make_shared<sns::MessageEngine>() );
     pListener->Listen( boost::asio::ip::tcp::endpoint{ address, port } );
     pListener->Run();
 

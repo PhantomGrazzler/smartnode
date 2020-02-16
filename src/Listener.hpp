@@ -1,7 +1,20 @@
 #pragma once
 
+// Disable MSVC warning 4265 for boost headers. The following warning is generated:
+// warning C4265: 'boost::exception_detail::error_info_container': class has virtual functions, but
+// destructor is not virtual.
+//
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4265 )
+#endif
+
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core/error.hpp>
+
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 #include <memory>
 #include <string>
@@ -35,9 +48,7 @@ public:
 private: // methods
     void DoAccept();
 
-    void OnAccept(
-        boost::beast::error_code ec,
-        boost::asio::ip::tcp::socket socket );
+    void OnAccept( boost::beast::error_code ec, boost::asio::ip::tcp::socket socket );
 
 private: // data
     boost::asio::io_context& m_ioc;
@@ -46,4 +57,4 @@ private: // data
     const std::shared_ptr<MessageEngine> m_pMsgEngine;
 };
 
-}
+} // namespace sns

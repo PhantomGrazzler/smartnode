@@ -1,18 +1,15 @@
 #include "MessageEngine.hpp"
-#include "Session.hpp"
-#include "PeerIdTypes.hpp"
+
 #include "ConsolePrinter.hpp"
+#include "PeerIdTypes.hpp"
+#include "Session.hpp"
 
-// Third-party
 #include <nlohmann/json.hpp>
-
-// Standard library
-#include <variant>
 #include <set>
+#include <variant>
 
 namespace sns
 {
-
 /*!
     @brief Builds an error message with the provided error message.
     @param[in] errorMsg The error message to include in the response.
@@ -27,7 +24,8 @@ std::string BuildErrorResponse( const std::string& errorMsg )
     return errorResp.dump( 2 );
 }
 
-const auto alreadyConnectedResponse = BuildErrorResponse( "Already connected with a different ID." );
+const auto alreadyConnectedResponse =
+    BuildErrorResponse( "Already connected with a different ID." );
 
 /*!
     @brief Removes any expired sessions from the provided container.
@@ -37,9 +35,9 @@ template<typename T>
 void RemoveExpiredSessions( T& container )
 {
     auto it = container.begin();
-    while( it != container.end() )
+    while ( it != container.end() )
     {
-        if( (*it).Session().expired() )
+        if ( ( *it ).Session().expired() )
         {
             it = container.erase( it );
         }
@@ -51,7 +49,7 @@ void RemoveExpiredSessions( T& container )
 }
 
 template<typename T, typename U>
-void RemoveDisconnectedPeer(T& container, const U id)
+void RemoveDisconnectedPeer( T& container, const U id )
 {
     for ( const auto& element : container )
     {
@@ -65,27 +63,23 @@ void RemoveDisconnectedPeer(T& container, const U id)
 }
 
 template<typename T>
-bool SessionInContainer(
-    const std::shared_ptr<Session>& pSession,
-    const T& container )
+bool SessionInContainer( const std::shared_ptr<Session>& pSession, const T& container )
 {
-    return std::find_if( container.cbegin(), container.cend(),
-        [&pSession]( const auto& connection )
-        {
-            return connection.Session().lock() == pSession;
-        } ) != container.cend();
+    return std::find_if(
+               container.cbegin(),
+               container.cend(),
+               [&pSession]( const auto& connection ) {
+                   return connection.Session().lock() == pSession;
+               } ) != container.cend();
 }
 
-bool MessageEngine::PeerAlreadyConnected(
-    const std::shared_ptr<Session>& pSession ) const
+bool MessageEngine::PeerAlreadyConnected( const std::shared_ptr<Session>& pSession ) const
 {
     return SessionInContainer( pSession, m_uiConnections ) ||
-        SessionInContainer( pSession, m_nodeConnections );
+           SessionInContainer( pSession, m_nodeConnections );
 }
 
-void MessageEngine::MessageReceived(
-    std::weak_ptr<Session>&& pSession,
-    const std::string& message )
+void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const std::string& message )
 {
     try
     {
@@ -99,7 +93,7 @@ void MessageEngine::MessageReceived(
             return;
         }
 
-        if( msgType == "ui_connect" )
+        if ( msgType == "ui_connect" )
         {
             const UIId& id = msg.at( "UIId" );
 
@@ -117,7 +111,7 @@ void MessageEngine::MessageReceived(
                 PrintInfo( id, " connected" );
             }
         }
-        else if( msgType == "node_connect" )
+        else if ( msgType == "node_connect" )
         {
             const NodeId& id = msg.at( "NodeId" );
 
@@ -137,7 +131,7 @@ void MessageEngine::MessageReceived(
             }
         }
     }
-    catch( const nlohmann::json::exception & e )
+    catch ( const nlohmann::json::exception& e )
     {
         PrintWarning( "Failed to parse incoming message: ", e.what() );
         PrintDebug( "Message: \n", message );
@@ -168,12 +162,9 @@ void MessageEngine::PeerDisconnected( std::weak_ptr<Session>&& pSession )
 
 template<typename T>
 void PrintContainer(
-    std::ostringstream& oss,
-    const T& container,
-    const std::string& prefix,
-    const char suffix )
+    std::ostringstream& oss, const T& container, const std::string& prefix, const char suffix )
 {
-    for (const auto& item : container)
+    for ( const auto& item : container )
     {
         oss << prefix << item.Id() << suffix;
     }
@@ -189,9 +180,7 @@ void MessageEngine::PrintConnections() const
     PrintInfo( "Connections:\n", oss.str() );
 }
 
-void MessageEngine::AddConnection(
-    std::weak_ptr<Session>&& pSession,
-    const UIId id )
+void MessageEngine::AddConnection( std::weak_ptr<Session>&& pSession, const UIId id )
 {
     RemoveExpiredSessions( m_uiConnections );
     m_uiConnections.emplace( id, std::move( pSession ) );
@@ -199,9 +188,7 @@ void MessageEngine::AddConnection(
     PrintConnections();
 }
 
-void MessageEngine::AddConnection(
-    std::weak_ptr<Session>&& pSession,
-    const NodeId id )
+void MessageEngine::AddConnection( std::weak_ptr<Session>&& pSession, const NodeId id )
 {
     RemoveExpiredSessions( m_nodeConnections );
     m_nodeConnections.emplace( id, std::move( pSession ) );
@@ -211,14 +198,14 @@ void MessageEngine::AddConnection(
 
 void MessageEngine::ForwardMessageToUIs( const std::string& message )
 {
-    for( const auto& connection : m_uiConnections )
+    for ( const auto& connection : m_uiConnections )
     {
         const auto pSession = connection.Session().lock();
-        if( pSession )
+        if ( pSession )
         {
             pSession->SendMessage( message );
         }
     }
 }
 
-}
+} // namespace sns

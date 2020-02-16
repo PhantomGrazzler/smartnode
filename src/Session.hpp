@@ -2,8 +2,21 @@
 
 #include "Connection.hpp"
 
+// Disable MSVC warning 4265 for boost headers. The following warning is generated:
+// warning C4265: 'boost::exception_detail::error_info_container': class has virtual functions, but
+// destructor is not virtual.
+//
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4265 )
+#endif
+
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
+
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 #include <memory>
 #include <variant>
@@ -38,7 +51,10 @@ public:
         @param[in] id ID of either a Node or UI.
      */
     template<typename T>
-    void SetPeerId( const T id ) { m_peerId = id; }
+    void SetPeerId( const T id )
+    {
+        m_peerId = id;
+    }
 
     /*!
         @brief Returns the ID of the remote peer.
@@ -55,9 +71,7 @@ private:
 
     void DoRead();
 
-    void OnRead(
-        boost::beast::error_code ec,
-        std::size_t bytes_transferred );
+    void OnRead( boost::beast::error_code ec, std::size_t bytes_transferred );
 
 private:
     boost::beast::websocket::stream<boost::beast::tcp_stream> m_ws;
@@ -69,4 +83,4 @@ private:
     std::variant<UIId, NodeId> m_peerId;
 };
 
-} 
+} // namespace sns
