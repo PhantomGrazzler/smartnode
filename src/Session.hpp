@@ -2,11 +2,21 @@
 
 #include "Connection.hpp"
 
+// Disable MSVC warning 4265 for boost headers. The following warning is generated:
+// warning C4265: 'boost::exception_detail::error_info_container': class has virtual functions, but
+// destructor is not virtual.
+//
+#ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : 4265 )
+#endif
+
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
+
+#ifdef _MSC_VER
 #pragma warning( pop )
+#endif
 
 #include <memory>
 #include <variant>
