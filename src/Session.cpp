@@ -27,25 +27,20 @@ Session::Session(
 void Session::Run()
 {
     // Set suggested timeout settings for the websocket
-    m_ws.set_option(
-        boost::beast::websocket::stream_base::timeout::suggested(
-            boost::beast::role_type::server ) );
+    m_ws.set_option( boost::beast::websocket::stream_base::timeout::suggested(
+        boost::beast::role_type::server ) );
 
     // Set a decorator to change the Server of the handshake
     const std::string serverName( m_serverName );
     m_ws.set_option( boost::beast::websocket::stream_base::decorator(
-        [serverName]( boost::beast::websocket::response_type & res )
-        {
-            res.set( boost::beast::http::field::server,
-                std::string( BOOST_BEAST_VERSION_STRING ) +
-                " " + serverName );
+        [serverName]( boost::beast::websocket::response_type& res ) {
+            res.set(
+                boost::beast::http::field::server,
+                std::string( BOOST_BEAST_VERSION_STRING ) + " " + serverName );
         } ) );
 
     // Accept the websocket handshake
-    m_ws.async_accept(
-        boost::beast::bind_front_handler(
-            &Session::OnAccept,
-            shared_from_this() ) );
+    m_ws.async_accept( boost::beast::bind_front_handler( &Session::OnAccept, shared_from_this() ) );
 }
 
 void Session::SendMessage( const std::string& message )
@@ -53,7 +48,7 @@ void Session::SendMessage( const std::string& message )
     boost::beast::error_code ec;
     m_ws.write( boost::asio::buffer( message ), ec );
 
-    if( ec )
+    if ( ec )
     {
         PrintError( "Failed to write message:\n", message, "\n\n" );
     }
@@ -86,7 +81,7 @@ std::string Session::PeerIdAsString() const
 
 void Session::OnAccept( boost::beast::error_code ec )
 {
-    if( ec )
+    if ( ec )
     {
         return PrintError( "OnAccept: ", ec.message() );
     }
@@ -103,23 +98,19 @@ void Session::DoRead()
     // Read a message into our buffer
     m_ws.async_read(
         m_buffer,
-        boost::beast::bind_front_handler(
-            &Session::OnRead,
-            shared_from_this() ) );
+        boost::beast::bind_front_handler( &Session::OnRead, shared_from_this() ) );
 }
 
-void Session::OnRead(
-    boost::beast::error_code ec,
-    std::size_t bytes_transferred )
+void Session::OnRead( boost::beast::error_code ec, std::size_t bytes_transferred )
 {
     // This indicates that the session was closed
-    if( ec == boost::beast::websocket::error::closed )
+    if ( ec == boost::beast::websocket::error::closed )
     {
         m_pMsgEngine->PeerDisconnected( shared_from_this() );
 
-        return PrintInfo( m_peerAddress, ":", m_peerPort, " disconnected.\n" );;
+        return PrintInfo( m_peerAddress, ":", m_peerPort, " disconnected.\n" );
     }
-    else if( ec )
+    else if ( ec )
     {
         PrintError( "OnRead", ec.message() );
     }
@@ -137,4 +128,4 @@ void Session::OnRead(
     DoRead();
 }
 
-}
+} // namespace sns

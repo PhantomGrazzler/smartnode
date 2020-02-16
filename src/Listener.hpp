@@ -1,7 +1,10 @@
 #pragma once
 
+#pragma warning( push )
+#pragma warning( disable : 4265 )
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core/error.hpp>
+#pragma warning( pop )
 
 #include <memory>
 #include <string>
@@ -35,9 +38,7 @@ public:
 private: // methods
     void DoAccept();
 
-    void OnAccept(
-        boost::beast::error_code ec,
-        boost::asio::ip::tcp::socket socket );
+    void OnAccept( boost::beast::error_code ec, boost::asio::ip::tcp::socket socket );
 
 private: // data
     boost::asio::io_context& m_ioc;
@@ -46,4 +47,4 @@ private: // data
     const std::shared_ptr<MessageEngine> m_pMsgEngine;
 };
 
-}
+} // namespace sns

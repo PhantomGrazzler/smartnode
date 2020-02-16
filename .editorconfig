@@ -12,5 +12,5 @@ indent_size = 4
 trim_trailing_whitespace = true
 
 # Settings for the VS Editor Guidelines extension
-guidelines = 120
+guidelines = 100
 guidelines_style = 1px dashed white

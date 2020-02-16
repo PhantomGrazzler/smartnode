@@ -2,8 +2,11 @@
 
 #include "Connection.hpp"
 
+#pragma warning( push )
+#pragma warning( disable : 4265 )
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
+#pragma warning( pop )
 
 #include <memory>
 #include <variant>
@@ -38,7 +41,10 @@ public:
         @param[in] id ID of either a Node or UI.
      */
     template<typename T>
-    void SetPeerId( const T id ) { m_peerId = id; }
+    void SetPeerId( const T id )
+    {
+        m_peerId = id;
+    }
 
     /*!
         @brief Returns the ID of the remote peer.
@@ -55,9 +61,7 @@ private:
 
     void DoRead();
 
-    void OnRead(
-        boost::beast::error_code ec,
-        std::size_t bytes_transferred );
+    void OnRead( boost::beast::error_code ec, std::size_t bytes_transferred );
 
 private:
     boost::beast::websocket::stream<boost::beast::tcp_stream> m_ws;
@@ -69,4 +73,4 @@ private:
     std::variant<UIId, NodeId> m_peerId;
 };
 
-} 
+} // namespace sns

@@ -6,7 +6,6 @@
 
 namespace sns
 {
-
 /*!
     @brief Prints a warning message to the console.
     @param[in] items The items to print with warning styling.
@@ -14,7 +13,8 @@ namespace sns
 template<typename... T>
 void PrintWarning( T&&... items )
 {
-    ((std::cout << rang::fg::yellow << "[WARNING] ") << ... << items) << rang::fg::reset << '\n';
+    ( ( std::cout << rang::fg::yellow << "[WARNING] " ) << ... << items )
+        << rang::fg::reset << '\n';
 }
 
 /*!
@@ -24,7 +24,7 @@ void PrintWarning( T&&... items )
 template<typename... T>
 void PrintError( T&&... items )
 {
-    ((std::cout << rang::fg::red << "[ERROR] ") << ... << items) << rang::fg::reset << '\n';
+    ( ( std::cout << rang::fg::red << "[ERROR] " ) << ... << items ) << rang::fg::reset << '\n';
 }
 
 /*!
@@ -34,7 +34,7 @@ void PrintError( T&&... items )
 template<typename... T>
 void PrintInfo( T&&... items )
 {
-    ((std::cout << rang::fg::cyan << "[INFO] ") << ... << items) << rang::fg::reset << '\n';
+    ( ( std::cout << rang::fg::cyan << "[INFO] " ) << ... << items ) << rang::fg::reset << '\n';
 }
 
 /*!
@@ -44,7 +44,7 @@ void PrintInfo( T&&... items )
 template<typename... T>
 void PrintDebug( T&&... items )
 {
-    ((std::cout << "[DEBUG] ") << ... << items) << '\n';
+    ( ( std::cout << "[DEBUG] " ) << ... << items ) << '\n';
 }
 
-}
+} // namespace sns
