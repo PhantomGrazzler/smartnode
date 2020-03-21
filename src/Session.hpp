@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Connection.hpp"
-
 // Disable MSVC warning 4265 for boost headers. The following warning is generated:
 // warning C4265: 'boost::exception_detail::error_info_container': class has virtual functions, but
 // destructor is not virtual.

@@ -26,17 +26,17 @@ target_include_directories(smartnode-server
     )
 
 target_sources(smartnode-server
-    PRIVATE src/Connection.hpp
+    PRIVATE src/main.cpp
+            src/Connection.hpp
             src/ConsolePrinter.hpp
-            src/main.cpp
+            src/IdTypes.cpp
+            src/IdTypes.hpp
             src/Listener.cpp
             src/Listener.hpp
             src/Session.cpp
             src/Session.hpp
             src/MessageEngine.cpp
             src/MessageEngine.hpp
-            src/PeerIdTypes.cpp
-            src/PeerIdTypes.hpp
     )
 
 target_link_libraries(smartnode-server

@@ -1,11 +1,9 @@
 #include "Session.hpp"
 #include "ConsolePrinter.hpp"
 #include "MessageEngine.hpp"
-#include "PeerIdTypes.hpp"
+#include "IdTypes.hpp"
 
-#include <nlohmann/json.hpp>
-
-#include <iostream>
+#include <sstream>
 
 namespace sns
 {
