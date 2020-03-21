@@ -3,9 +3,7 @@
 #include "MessageEngine.hpp"
 #include "IdTypes.hpp"
 
-#include <nlohmann/json.hpp>
-
-#include <iostream>
+#include <sstream>
 
 namespace sns
 {
