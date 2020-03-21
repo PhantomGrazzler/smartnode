@@ -1,7 +1,7 @@
 #include "MessageEngine.hpp"
 
 #include "ConsolePrinter.hpp"
-#include "PeerIdTypes.hpp"
+#include "IdTypes.hpp"
 #include "Session.hpp"
 
 #include <nlohmann/json.hpp>
@@ -129,6 +129,16 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
 
                 ForwardMessageToUIs( message );
             }
+        }
+        else if ( msgType == "input_update" )
+        {
+            const NodeId& id = msg.at( "NodeId" );
+            const IOId& ioId = msg.at( "IOId" );
+            const auto value = msg.at( "Value" );
+
+            PrintDebug( id, " updated ", ioId, " to ", value );
+
+            ForwardMessageToUIs( msg.dump() );
         }
     }
     catch ( const nlohmann::json::exception& e )

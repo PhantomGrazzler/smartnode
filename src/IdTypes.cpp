@@ -1,4 +1,4 @@
-#include "PeerIdTypes.hpp"
+#include "IdTypes.hpp"
 
 #include <cstdint>
 #include <ostream>
@@ -14,6 +14,11 @@ std::ostream& operator<<( std::ostream& os, const UIId id )
 std::ostream& operator<<( std::ostream& os, const NodeId id )
 {
     return os << "Node " << static_cast<uint32_t>( id );
+}
+
+std::ostream& operator<<( std::ostream& os, const IOId id )
+{
+    return os << "IO " << static_cast<uint32_t>( id );
 }
 
 } // namespace sns
