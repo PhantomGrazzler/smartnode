@@ -10,7 +10,7 @@ SmartNodeServer uses Conan and CMake. The instructions below contain example com
 
 1. Clone this repository: ```git clone https://github.com/PhantomGrazzler/SmartNodeServer.git```
 2. Create a build directory, _e.g._ ```mkdir build && cd build```
-3. Install dependencies: ```conan install .. -s build_type=Debug```
+3. Install dependencies: ```conan install .. -s build_type=Debug --build missing```
 4. Run the CMake configure step: ```cmake .. -DCMAKE_BUILD_TYPE=Debug```
 5. Build the server using CMake: ```cmake --build . --config Debug```
 

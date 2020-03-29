@@ -22,17 +22,17 @@ int main( int argc, char* argv[] )
     // Check command line arguments.
     if ( argc != 3 )
     {
-        sns::PrintWarning( "\nProvided ", ( argc - 1 ), " arguments, expected 2." );
-        sns::PrintWarning( "Starting assuming server address of 127.0.0.1 and port 8080." );
         // clang-format off
         sns::PrintInfo(
-            "\nUsage: ", programName, " <address> <port>\n",
+            "Usage: ", programName, " <address> <port>\n",
             "Example:\n",
             "    ", programName, " 127.0.0.1 8080\n" );
         // clang-format on
 
         addressStr = "127.0.0.1";
         portStr = "8080";
+
+        sns::PrintWarning( "Starting assuming server address of 127.0.0.1 and port 8080." );
     }
     else
     {

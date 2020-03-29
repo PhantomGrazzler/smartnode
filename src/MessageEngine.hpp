@@ -2,9 +2,12 @@
 
 #include "Connection.hpp"
 
+#include <nlohmann/json.hpp>
+
 #include <set>
 #include <memory>
 #include <string>
+#include <map>
 
 namespace sns
 {
@@ -67,9 +70,21 @@ private: // methods
      */
     void PrintConnections() const;
 
+    /*!
+        @brief Builds an "all_nodes_state" message.
+     */
+    std::string BuildAllNodesState() const;
+
+    /*!
+        @brief Returns true if the node with the provided ID is currently connected.
+        @param[in] id The node ID to test.
+     */
+    bool IsNodeConnected( const NodeId id ) const;
+
 private: // data
     std::set<Connection<UIId>> m_uiConnections;
     std::set<Connection<NodeId>> m_nodeConnections;
+    std::map<NodeId, nlohmann::json> m_nodeStates;
 };
 
 } // namespace sns
