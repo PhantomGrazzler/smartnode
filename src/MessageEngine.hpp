@@ -15,6 +15,7 @@ namespace sns
 class Session;
 enum class UIId;
 enum class NodeId;
+enum class IOId;
 
 class MessageEngine final
 {
@@ -80,6 +81,22 @@ private: // methods
         @param[in] id The node ID to test.
      */
     bool IsNodeConnected( const NodeId id ) const;
+
+    /*!
+        @brief Updates the value of the specified IO in the local cache.
+        @param[in] nodeId The node for which the value should be updated.
+        @param[in] ioId The IO in the node for which the value should be updated.
+        @param[in] value The new value to set for the specified IO.
+     */
+    template<typename T>
+    void UpdateIOCache( const NodeId nodeId, const IOId ioId, const T value );
+
+    /*!
+        @brief Sends a message to the specified node.
+        @param[in] nodeId The node to which the message should be sent.
+        @param[in] message The message to send.
+     */
+    void SendMessageToNode( const NodeId nodeId, const std::string& message );
 
 private: // data
     std::set<Connection<UIId>> m_uiConnections;

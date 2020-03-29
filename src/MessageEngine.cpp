@@ -133,28 +133,33 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
         }
         else if ( msgType == "input_update" )
         {
-            const NodeId& id = msg.at( "NodeId" );
-            const IOId& ioId = msg.at( "IOId" );
+            const NodeId nodeId = msg.at( "NodeId" );
+            const IOId ioId = msg.at( "IOId" );
             const auto newValue = msg.at( "Value" );
 
-            // Update the IO value in our cache.
-            //
-            auto& nodeJson = m_nodeStates.at( id );
-            for ( auto& [key, io] : nodeJson.items() )
-            {
-                for ( auto& [key2, ioDescription] : io.items() )
-                {
-                    if ( ioDescription["IOId"] == ioId )
-                    {
-                        ioDescription["Value"] = newValue;
-                        break;
-                    }
-                }
-            }
+            UpdateIOCache( nodeId, ioId, newValue );
 
-            PrintDebug( id, " updated ", ioId, " to ", newValue );
+            PrintDebug( nodeId, " updated ", ioId, " to ", newValue );
 
             ForwardMessageToUIs( msg.dump( 2 ) );
+        }
+        else if ( msgType == "output_update" )
+        {
+            const NodeId nodeId = msg.at( "NodeId" );
+            const IOId ioId = msg.at( "IOId" );
+            const auto newValue = msg.at( "Value" );
+
+            UpdateIOCache( nodeId, ioId, newValue );
+
+            const auto uiId = pLockedSession->PeerIdAsString();
+            PrintDebug( uiId, " updated ", ioId, " to ", newValue, " on ", nodeId );
+
+            SendMessageToNode( nodeId, message );
+            ForwardMessageToUIs( message );
+        }
+        else
+        {
+            PrintDebug( "Unknown message received: ", message );
         }
     }
     catch ( const nlohmann::json::exception& e )
@@ -215,6 +220,30 @@ bool MessageEngine::IsNodeConnected( const NodeId id ) const
            m_nodeConnections.cend();
 }
 
+void MessageEngine::SendMessageToNode( const NodeId nodeId, const std::string& message )
+{
+    const auto nodeConnection = std::find_if(
+        m_nodeConnections.cbegin(),
+        m_nodeConnections.cend(),
+        [nodeId]( const auto& connection ) { return connection.Id() == nodeId; } );
+
+    if ( nodeConnection != m_nodeConnections.cend() )
+    {
+        if ( const auto pLockedSession = ( *nodeConnection ).Session().lock() )
+        {
+            pLockedSession->SendMessage( message );
+        }
+        else
+        {
+            PrintWarning( nodeId, " is not connected" );
+        }
+    }
+    else
+    {
+        PrintWarning( nodeId, " is not connected" );
+    }
+}
+
 std::string MessageEngine::BuildAllNodesState() const
 {
     nlohmann::json allNodesState;
@@ -259,6 +288,26 @@ void MessageEngine::ForwardMessageToUIs( const std::string& message )
         if ( pSession )
         {
             pSession->SendMessage( message );
+        }
+    }
+}
+
+template<typename T>
+void MessageEngine::UpdateIOCache( const NodeId nodeId, const IOId ioId, const T value )
+{
+    if ( m_nodeStates.find( nodeId ) != m_nodeStates.cend() )
+    {
+        auto& nodeJson = m_nodeStates.at( nodeId );
+        for ( auto& [key, io] : nodeJson.items() )
+        {
+            for ( auto& [key2, ioDescription] : io.items() )
+            {
+                if ( ioDescription["IOId"] == ioId )
+                {
+                    ioDescription["Value"] = value;
+                    break;
+                }
+            }
         }
     }
 }
