@@ -18,6 +18,7 @@
 #include <cstdlib>
 #include <memory>
 #include <string>
+#include <thread>
 
 //------------------------------------------------------------------------------
 const std::string programName( "smartnode-server" );
