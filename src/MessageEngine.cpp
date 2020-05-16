@@ -84,7 +84,7 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
     {
         const nlohmann::json msg = nlohmann::json::parse( message );
         const auto& msgType = msg.at( "MsgType" );
-        Log( spdlog::level::debug, "Message Type is {}", msgType );
+        Log( spdlog::level::debug, "Message Type is {}", msgType.dump() );
         const auto pLockedSession = pSession.lock();
 
         if ( pLockedSession == nullptr )
@@ -152,7 +152,7 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
 
             UpdateIOCache( nodeId, ioId, newValue );
 
-            Log( spdlog::level::info, "{} updated {} to {}", nodeId, ioId, newValue );
+            Log( spdlog::level::info, "{} updated {} to {}", nodeId, ioId, newValue.dump() );
             PrintInfo( nodeId, " updated ", ioId, " to ", newValue );
 
             ForwardMessageToUIs( msg.dump( 2 ) );
@@ -166,7 +166,7 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
             UpdateIOCache( nodeId, ioId, newValue );
 
             const auto uiId = pLockedSession->PeerIdAsString();
-            Log( spdlog::level::info, "{} updated {} to {} on {}", uiId, ioId, newValue, nodeId );
+            Log( spdlog::level::info, "{} updated {} to {} on {}", uiId, ioId, newValue.dump(), nodeId );
             PrintDebug( uiId, " updated ", ioId, " to ", newValue, " on ", nodeId );
 
             SendMessageToNode( nodeId, message );
