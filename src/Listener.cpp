@@ -1,6 +1,7 @@
 #include "Listener.hpp"
 #include "Session.hpp"
 #include "ConsolePrinter.hpp"
+#include "Logger.hpp"
 
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
@@ -29,6 +30,7 @@ void Listener::Listen( const boost::asio::ip::tcp::endpoint& endpoint )
     m_acceptor.open( endpoint.protocol(), ec );
     if ( ec )
     {
+        Log( spdlog::level::err, "Failed to open: {}", ec.message() );
         return PrintError( "open: ", ec.message() );
     }
 
@@ -36,6 +38,7 @@ void Listener::Listen( const boost::asio::ip::tcp::endpoint& endpoint )
     m_acceptor.set_option( boost::asio::socket_base::reuse_address( true ), ec );
     if ( ec )
     {
+        Log( spdlog::level::err, "Failed to set_option: {}", ec.message() );
         return PrintError( "set_option: ", ec.message() );
     }
 
@@ -43,6 +46,7 @@ void Listener::Listen( const boost::asio::ip::tcp::endpoint& endpoint )
     m_acceptor.bind( endpoint, ec );
     if ( ec )
     {
+        Log( spdlog::level::err, "Failed to bind: {}", ec.message() );
         return PrintError( "bind: ", ec.message() );
     }
 
@@ -50,6 +54,7 @@ void Listener::Listen( const boost::asio::ip::tcp::endpoint& endpoint )
     m_acceptor.listen( boost::asio::socket_base::max_listen_connections, ec );
     if ( ec )
     {
+        Log( spdlog::level::err, "Failed to listen: {}", ec.message() );
         return PrintError( "listen: ", ec.message() );
     }
 }
@@ -75,13 +80,12 @@ void Listener::OnAccept( boost::beast::error_code ec, boost::asio::ip::tcp::sock
     }
     else
     {
-        // clang-format off
-        PrintInfo(
-            "New connection from ",
-            socket.remote_endpoint().address(), ':', socket.remote_endpoint().port(),
-            " bound to ",
-            socket.local_endpoint().address(), ':', socket.local_endpoint().port() );
-        // clang-format on
+        Log( spdlog::level::debug,
+             "New connection from {}:{} bound to {}:{}",
+             socket.remote_endpoint().address().to_string(),
+             socket.remote_endpoint().port(),
+             socket.local_endpoint().address().to_string(),
+             socket.local_endpoint().port() );
 
         // Create the session and run it
         std::make_shared<Session>( std::move( socket ), m_serverName, m_pMsgEngine )->Run();

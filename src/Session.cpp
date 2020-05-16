@@ -2,6 +2,7 @@
 #include "ConsolePrinter.hpp"
 #include "MessageEngine.hpp"
 #include "IdTypes.hpp"
+#include "Logger.hpp"
 
 #include <sstream>
 
@@ -48,6 +49,7 @@ void Session::SendMessage( const std::string& message )
 
     if ( ec )
     {
+        Log( spdlog::level::err, "Failed to write message: {}", message );
         PrintError( "Failed to write message:\n", message, "\n\n" );
     }
 }
@@ -81,6 +83,7 @@ void Session::OnAccept( boost::beast::error_code ec )
 {
     if ( ec )
     {
+        Log( spdlog::level::err, "Failed to accept connection: {}", ec.message() );
         return PrintError( "OnAccept: ", ec.message() );
     }
 
@@ -106,24 +109,28 @@ void Session::OnRead( boost::beast::error_code ec, std::size_t bytes_transferred
     {
         m_pMsgEngine->PeerDisconnected( shared_from_this() );
 
-        return PrintInfo( m_peerAddress, ":", m_peerPort, " disconnected.\n" );
+        Log( spdlog::level::debug, "{}:{} disconnected", m_peerAddress.to_string(), m_peerPort );
+        return;
     }
     else if ( ec )
     {
-        PrintError( "OnRead", ec.message() );
+        Log( spdlog::level::err, "Read error: ", ec.message() );
+        PrintError( "OnRead: ", ec.message() );
     }
+    else
+    {
+        Log( spdlog::level::debug, "Received {} bytes", bytes_transferred );
 
-    PrintDebug( "Received ", bytes_transferred, " bytes" );
+        std::stringstream ss;
+        ss << boost::beast::make_printable( m_buffer.data() );
+        m_pMsgEngine->MessageReceived( weak_from_this(), ss.str() );
 
-    std::stringstream ss;
-    ss << boost::beast::make_printable( m_buffer.data() );
-    m_pMsgEngine->MessageReceived( weak_from_this(), ss.str() );
+        // Clear the buffer
+        m_buffer.consume( m_buffer.size() );
 
-    // Clear the buffer
-    m_buffer.consume( m_buffer.size() );
-
-    // Queue up another read
-    DoRead();
+        // Queue up another read
+        DoRead();
+    }
 }
 
 } // namespace sns
