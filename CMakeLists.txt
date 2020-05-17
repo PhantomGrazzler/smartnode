@@ -33,6 +33,8 @@ target_sources(smartnode-server
             src/IdTypes.hpp
             src/Listener.cpp
             src/Listener.hpp
+            src/Logger.cpp
+            src/Logger.hpp
             src/Session.cpp
             src/Session.hpp
             src/MessageEngine.cpp
@@ -43,6 +45,7 @@ target_link_libraries(smartnode-server
     PRIVATE CONAN_PKG::boost
             CONAN_PKG::nlohmann_json
             CONAN_PKG::rang
+            CONAN_PKG::spdlog
     )
 
 # Options to add compiler warning flags, and turn on warnings as errors.

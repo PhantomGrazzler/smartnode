@@ -12,14 +12,16 @@ matrix:
             - CONAN_COMPILER_VERSION=7
             - CONAN_LIBCXX=libstdc++11
 
-        - os: linux
-          dist: bionic
-          compiler: clang
-          env:
-            - CMAKE_COMPILER=clang++
-            - CONAN_COMPILER=clang
-            - CONAN_COMPILER_VERSION=7.0
-            - CONAN_LIBCXX=libc++
+# Disabled clang because I get linking errors when trying to build. This should be re-enabled when
+# Issue #32 is resolved (https://github.com/PhantomGrazzler/SmartNodeServer/issues/32).
+#        - os: linux
+#          dist: bionic
+#          compiler: clang
+#          env:
+#            - CMAKE_COMPILER=clang++
+#            - CONAN_COMPILER=clang
+#            - CONAN_COMPILER_VERSION=7.0
+#            - CONAN_LIBCXX=libc++
 
 install:
     # Install conan

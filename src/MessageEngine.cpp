@@ -2,6 +2,7 @@
 #include "ConsolePrinter.hpp"
 #include "IdTypes.hpp"
 #include "Session.hpp"
+#include "Logger.hpp"
 
 #include <set>
 #include <variant>
@@ -83,7 +84,7 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
     {
         const nlohmann::json msg = nlohmann::json::parse( message );
         const auto& msgType = msg.at( "MsgType" );
-        PrintDebug( "Message Type is ", msgType );
+        Log( spdlog::level::debug, "Message Type is {}", msgType.dump() );
         const auto pLockedSession = pSession.lock();
 
         if ( pLockedSession == nullptr )
@@ -99,12 +100,18 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
             {
                 pLockedSession->SendMessage( alreadyConnectedResponse );
 
+                Log( spdlog::level::warn,
+                     "{} attempting to connect as {}",
+                     pLockedSession->PeerIdAsString(),
+                     id );
                 PrintWarning( pLockedSession->PeerIdAsString(), " attempting to connect as ", id );
             }
             else
             {
                 pLockedSession->SetPeerId( id );
                 AddConnection( std::move( pSession ), id );
+
+                Log( spdlog::level::info, "{} connected", id );
                 PrintInfo( id, " connected" );
 
                 pLockedSession->SendMessage( BuildAllNodesState() );
@@ -118,12 +125,18 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
             {
                 pLockedSession->SendMessage( alreadyConnectedResponse );
 
+                Log( spdlog::level::warn,
+                     "{} attempting to connect as {}",
+                     pLockedSession->PeerIdAsString(),
+                     id );
                 PrintWarning( pLockedSession->PeerIdAsString(), " attempting to connect as ", id );
             }
             else
             {
                 pLockedSession->SetPeerId( id );
                 AddConnection( std::move( pSession ), id );
+
+                Log( spdlog::level::info, "{} connected", id );
                 PrintInfo( id, " connected" );
 
                 m_nodeStates.emplace( id, msg["Capabilities"] );
@@ -139,7 +152,8 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
 
             UpdateIOCache( nodeId, ioId, newValue );
 
-            PrintDebug( nodeId, " updated ", ioId, " to ", newValue );
+            Log( spdlog::level::info, "{} updated {} to {}", nodeId, ioId, newValue.dump() );
+            PrintInfo( nodeId, " updated ", ioId, " to ", newValue );
 
             ForwardMessageToUIs( msg.dump( 2 ) );
         }
@@ -152,6 +166,7 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
             UpdateIOCache( nodeId, ioId, newValue );
 
             const auto uiId = pLockedSession->PeerIdAsString();
+            Log( spdlog::level::info, "{} updated {} to {} on {}", uiId, ioId, newValue.dump(), nodeId );
             PrintDebug( uiId, " updated ", ioId, " to ", newValue, " on ", nodeId );
 
             SendMessageToNode( nodeId, message );
@@ -159,7 +174,8 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
         }
         else
         {
-            PrintDebug( "Unknown message received: ", message );
+            Log( spdlog::level::warn, "Unknown message received: {}", message );
+            PrintWarning( "Unknown message received: ", message );
         }
     }
     catch ( const nlohmann::json::exception& e )
@@ -209,6 +225,7 @@ void MessageEngine::PrintConnections() const
     PrintContainer( oss, m_nodeConnections, "  ", '\n' );
 
     PrintInfo( "Connections:\n", oss.str() );
+    Log( spdlog::level::info, "Active connections:\n {}", oss.str() );
 }
 
 bool MessageEngine::IsNodeConnected( const NodeId id ) const
