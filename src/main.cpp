@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <chrono>
 
 //------------------------------------------------------------------------------
 const std::string programName( "smartnode-server" );
@@ -63,7 +64,7 @@ int main( int argc, char* argv[] )
 
     try
     {
-        const auto pFileLogger = spdlog::rotating_logger_mt(
+        spdlog::rotating_logger_mt(
             sns::loggerName,
             "logs/debug.log",
             maxLogSize_bytes,
@@ -141,5 +142,7 @@ int main( int argc, char* argv[] )
 
     sns::Log( spdlog::level::debug, "Exiting ", programName );
     spdlog::drop_all();
+    spdlog::shutdown();
+
     return EXIT_SUCCESS;
 }
