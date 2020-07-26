@@ -2,6 +2,7 @@
 sfml/2.5.1@bincrafters/stable
 imgui/1.76
 imgui-sfml/2.1@bincrafters/stable
+boost/1.71.0
 
 [generators]
 cmake

@@ -27,11 +27,13 @@ target_include_directories(smartnodeui
 
 target_sources(smartnodeui
     PRIVATE src/main.cpp
+            src/session.hpp
+            src/session.cpp
     )
 
 target_link_libraries(smartnodeui
-    PRIVATE CONAN_PKG::opengl
-            CONAN_PKG::imgui-sfml
+    PRIVATE CONAN_PKG::imgui-sfml
+            CONAN_PKG::boost
     )
 
 # Options to add compiler warning flags, and turn on warnings as errors.
