@@ -45,6 +45,7 @@ class session : public std::enable_shared_from_this<session>
     std::string host_;
     std::string send_msg_;
     std::function<void( std::string )> read_callback_;
+    std::function<void()> connect_callback_;
 
 public:
     // Resolver and socket require an io_context
@@ -56,6 +57,11 @@ public:
     void register_read_callback( std::function<void( std::string )> callback )
     {
         read_callback_ = callback;
+    }
+
+    void register_connect_callback( std::function<void()> callback )
+    {
+        connect_callback_ = callback;
     }
 
     // Start the asynchronous operation
@@ -130,6 +136,11 @@ public:
     {
         if ( ec )
             return fail( ec, "handshake" );
+
+        if ( connect_callback_ )
+        {
+            connect_callback_();
+        }
 
         async_read();
     }

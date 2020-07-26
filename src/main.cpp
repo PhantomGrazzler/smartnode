@@ -81,6 +81,7 @@ int main()
     int port = 8080;
     char msg[1024] = {};
     char msg_out[1024] = {};
+    std::uint32_t uiId = 1;
 
     while ( window.isOpen() )
     {
@@ -105,6 +106,17 @@ int main()
         {
             window.close();
         }
+        ImGui::Text( "UI ID: " );
+        ImGui::SameLine();
+        ImGui::InputScalarN(
+            "##ui_id_input",
+            ImGuiDataType_::ImGuiDataType_U32,
+            &uiId,
+            1,
+            nullptr,
+            nullptr,
+            "%d",
+            decimalInputOptions );
         ImGui::End();
 
         ImGui::Begin( "State" );
@@ -146,6 +158,11 @@ int main()
                 std::cout << "Connecting to " << ipAddress.str() << ':' << port << '\n';
 
                 pSession = std::make_shared<session>( ioc );
+                pSession->register_connect_callback( [uiId, pSession]() {
+                    std::ostringstream oss;
+                    oss << R"({"MsgType": "ui_connect", "UIId": )" << uiId << '}';
+                    pSession->async_write( oss.str() );
+                } );
                 pSession->register_read_callback( [&msg_out]( std::string msg ) {
                     std::size_t index = 0;
                     while ( index < msg.size() )
