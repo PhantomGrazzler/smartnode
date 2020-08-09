@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Connection.hpp"
+#include "connection.hpp"
 
 #include <nlohmann/json.hpp>
 
