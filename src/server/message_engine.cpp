@@ -322,8 +322,10 @@ void MessageEngine::UpdateIOCache( const NodeId nodeId, const IOId ioId, const T
         auto& nodeJson = m_nodeStates.at( nodeId );
         for ( auto& [key, io] : nodeJson.items() )
         {
+            (void)key; // silence unused variable warning
             for ( auto& [key2, ioDescription] : io.items() )
             {
+                (void)key2; // silence unused variable warning
                 if ( ioDescription["IOId"] == ioId )
                 {
                     ioDescription["Value"] = value;
