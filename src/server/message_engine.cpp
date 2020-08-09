@@ -1,8 +1,8 @@
-#include "MessageEngine.hpp"
-#include "ConsolePrinter.hpp"
-#include "IdTypes.hpp"
-#include "Session.hpp"
-#include "Logger.hpp"
+#include "message_engine.hpp"
+#include "console_printer.hpp"
+#include "id_types.hpp"
+#include "session.hpp"
+#include "logger.hpp"
 
 #include <set>
 #include <variant>
@@ -166,7 +166,12 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
             UpdateIOCache( nodeId, ioId, newValue );
 
             const auto uiId = pLockedSession->PeerIdAsString();
-            Log( spdlog::level::info, "{} updated {} to {} on {}", uiId, ioId, newValue.dump(), nodeId );
+            Log( spdlog::level::info,
+                 "{} updated {} to {} on {}",
+                 uiId,
+                 ioId,
+                 newValue.dump(),
+                 nodeId );
             PrintDebug( uiId, " updated ", ioId, " to ", newValue, " on ", nodeId );
 
             SendMessageToNode( nodeId, message );
