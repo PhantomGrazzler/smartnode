@@ -1,8 +1,8 @@
-#include "Session.hpp"
-#include "ConsolePrinter.hpp"
-#include "MessageEngine.hpp"
-#include "IdTypes.hpp"
-#include "Logger.hpp"
+#include "session.hpp"
+#include "console_printer.hpp"
+#include "message_engine.hpp"
+#include "id_types.hpp"
+#include "logger.hpp"
 
 #include <sstream>
 
