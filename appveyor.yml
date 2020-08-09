@@ -20,6 +20,6 @@ build_script:
     - cmd: cd build
     - cmd: cd # Print the current working directory
     - cmd: conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
-    - cmd: conan install .. -s build_type=Debug
+    - cmd: conan install .. -s build_type=Debug --build missing
     - cmd: cmake -G "Visual Studio 16 2019" -A x64 ..
     - cmd: cmake --build . --config Debug
