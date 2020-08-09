@@ -35,7 +35,7 @@ script:
     # Download dependencies and build project
     - conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
     - conan profile update settings.compiler.libcxx=libstdc++11 default
-    - conan install .. -s build_type=Debug -s compiler=${CONAN_COMPILER} -s compiler.libcxx=${CONAN_LIBCXX} -s compiler.version=${CONAN_COMPILER_VERSION}
+    - conan install .. -s build_type=Debug --build missing -s compiler=${CONAN_COMPILER} -s compiler.libcxx=${CONAN_LIBCXX} -s compiler.version=${CONAN_COMPILER_VERSION}
     # Call your build system
     - cmake -DCMAKE_CXX_COMPILER=${CMAKE_COMPILER} -DCMAKE_BUILD_TYPE=Debug ..
     - cmake --build . -j `nproc`
