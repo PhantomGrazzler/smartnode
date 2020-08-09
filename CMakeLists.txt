@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(SmartNodeServer
+project(smartnode
         VERSION 0.1.0
-        DESCRIPTION "Websocket server for SmartNodes and SmartNode UIs"
-        HOMEPAGE_URL "https://github.com/PhantomGrazzler/SmartNodeServer"
+        DESCRIPTION "SmartNode server and UI written in C++"
+        HOMEPAGE_URL "https://github.com/PhantomGrazzler/smartnode"
         LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -18,7 +18,7 @@ conan_basic_setup(TARGETS)
 configure_file(.editorconfig .editorconfig COPYONLY)
 configure_file(.clang-format .clang-format COPYONLY)
 
-# Main application executable.
+# Server executable.
 add_executable(smartnode-server)
 
 target_include_directories(smartnode-server
@@ -46,6 +46,24 @@ target_link_libraries(smartnode-server
             CONAN_PKG::nlohmann_json
             CONAN_PKG::rang
             CONAN_PKG::spdlog
+    )
+
+# UI executable
+add_executable(smartnodeui)
+
+target_include_directories(smartnodeui
+    PRIVATE src
+    )
+
+target_sources(smartnodeui
+    PRIVATE src/main.cpp
+            src/session.hpp
+            src/session.cpp
+    )
+
+target_link_libraries(smartnodeui
+    PRIVATE CONAN_PKG::imgui-sfml
+            CONAN_PKG::boost
     )
 
 # Options to add compiler warning flags, and turn on warnings as errors.

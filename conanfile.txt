@@ -3,6 +3,9 @@ boost/1.71.0@conan/stable
 nlohmann_json/3.7.3
 rang/3.1.0@rang/stable
 spdlog/1.5.0
+sfml/2.5.1@bincrafters/stable
+imgui/1.76
+imgui-sfml/2.1@bincrafters/stable
 
 [generators]
 cmake
