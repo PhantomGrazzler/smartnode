@@ -15,13 +15,27 @@ matrix:
             apt:
               packages:
                 - libgl1-mesa-dev
-                - xorg-dev
-                - freeglut3-dev
+                - libgl1-mesa-glx
+                - libglu1-mesa-dev
                 - libglew-dev
+                - libgl-dev
+                - freeglut3-dev
+                - xorg-dev
                 - mesa-utils
+                - mesa-common-dev
+                - libx11-xcb-dev
+                - libxcb-render0-dev
                 - libxcb-render-util0-dev
                 - libxcb-xkb-dev
-                - libgl1-mesa-glx
+                - libxcb-icccm4-dev
+                - libxcb-render-util0-dev
+                - libxcb-image0-dev
+                - libxcb-keysyms1-dev
+                - libxcb-randr0-dev
+                - libxcb-shape0-dev
+                - libxcb-sync-dev
+                - libxcb-xfixes0-dev
+                - libxcb-xinerama0-dev
 
 # Disabled clang because I get linking errors when trying to build. This should be re-enabled when
 # Issue #32 is resolved (https://github.com/PhantomGrazzler/SmartNodeServer/issues/32).
