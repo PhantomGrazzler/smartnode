@@ -1,4 +1,4 @@
-version: '1.0.{build}'
+version: '0.1.{build}.{branch}'
 
 image: Visual Studio 2019
 
@@ -19,6 +19,7 @@ build_script:
     - cmd: mkdir build
     - cmd: cd build
     - cmd: cd # Print the current working directory
+    - cmd: conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
     - cmd: conan install .. -s build_type=Debug
     - cmd: cmake -G "Visual Studio 16 2019" -A x64 ..
     - cmd: cmake --build . --config Debug
