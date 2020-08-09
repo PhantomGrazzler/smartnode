@@ -1,190 +1,84 @@
-//
-// Copyright (c) 2016-2019 Vinnie Falco (vinnie dot falco at gmail dot com)
-//
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
-// Official repository: https://github.com/boostorg/beast
-//
+#pragma once
 
-//------------------------------------------------------------------------------
+// Disable MSVC warning 4265 for boost headers. The following warning is generated:
+// warning C4265: 'boost::exception_detail::error_info_container': class has virtual functions, but
+// destructor is not virtual.
 //
-// Example: WebSocket client, asynchronous
-//
-//------------------------------------------------------------------------------
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : 4265 )
+#endif
 
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
-#include <boost/asio/strand.hpp>
-#include <cstdlib>
-#include <functional>
-#include <iostream>
+
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
+
 #include <memory>
-#include <string>
+#include <variant>
 
-namespace beast = boost::beast;         // from <boost/beast.hpp>
-namespace http = beast::http;           // from <boost/beast/http.hpp>
-namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
-namespace net = boost::asio;            // from <boost/asio.hpp>
-using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
-
-//------------------------------------------------------------------------------
-
-// Report a failure
-void fail( beast::error_code ec, char const* what )
+namespace sns
 {
-    std::cerr << what << ": " << ec.message() << "\n";
-}
 
-// Sends a WebSocket message and prints the response
-class session : public std::enable_shared_from_this<session>
+class MessageEngine;
+enum class UIId;
+enum class NodeId;
+
+class Session final : public std::enable_shared_from_this<Session>
 {
-    tcp::resolver resolver_;
-    websocket::stream<beast::tcp_stream> ws_;
-    beast::flat_buffer buffer_;
-    std::string host_;
-    std::string send_msg_;
-    std::function<void( std::string )> read_callback_;
-    std::function<void()> connect_callback_;
-
 public:
-    // Resolver and socket require an io_context
-    explicit session( net::io_context& ioc )
-        : resolver_( net::make_strand( ioc ) )
-        , ws_( net::make_strand( ioc ) )
-    {}
-
-    void register_read_callback( std::function<void( std::string )> callback )
-    {
-        read_callback_ = callback;
-    }
-
-    void register_connect_callback( std::function<void()> callback )
-    {
-        connect_callback_ = callback;
-    }
+    // Take ownership of the socket
+    Session(
+        boost::asio::ip::tcp::socket&& socket,
+        const std::string& serverName,
+        const std::shared_ptr<MessageEngine>& pMsgEngine );
 
     // Start the asynchronous operation
-    void run( const std::string& host, const std::string& port )
-    {
-        // Save these for later
-        host_ = host;
+    void Run();
 
-        // Look up the domain name
-        resolver_.async_resolve(
-            host,
-            port,
-            beast::bind_front_handler( &session::on_resolve, shared_from_this() ) );
+    /*!
+        @brief Synchronously send the provided message to the remote peer.
+        @param[in] message The message to be sent to the remote peer.
+     */
+    void SendMessage( const std::string& message );
+
+    /*!
+        @brief Sets the ID of the connected peer represented by this session.
+        @param[in] id ID of either a Node or UI.
+     */
+    template<typename T>
+    void SetPeerId( const T id )
+    {
+        m_peerId = id;
     }
 
-    void on_resolve( beast::error_code ec, tcp::resolver::results_type results )
-    {
-        if ( ec )
-            return fail( ec, "resolve" );
+    /*!
+        @brief Returns the ID of the remote peer.
+     */
+    std::variant<UIId, NodeId> GetPeerId() const;
 
-        // Set the timeout for the operation
-        beast::get_lowest_layer( ws_ ).expires_after( std::chrono::seconds( 30 ) );
+    /*!
+        @brief Returns the ID of the remote peer as a string.
+     */
+    std::string PeerIdAsString() const;
 
-        // Make the connection on the IP address we get from a lookup
-        beast::get_lowest_layer( ws_ ).async_connect(
-            results,
-            beast::bind_front_handler( &session::on_connect, shared_from_this() ) );
-    }
+private:
+    void OnAccept( boost::beast::error_code ec );
 
-    void on_connect( beast::error_code ec, tcp::resolver::results_type::endpoint_type )
-    {
-        if ( ec )
-            return fail( ec, "connect" );
+    void DoRead();
 
-        // Turn off the timeout on the tcp_stream, because
-        // the websocket stream has its own timeout system.
-        beast::get_lowest_layer( ws_ ).expires_never();
+    void OnRead( boost::beast::error_code ec, std::size_t bytes_transferred );
 
-        // Set suggested timeout settings for the websocket
-        ws_.set_option( websocket::stream_base::timeout::suggested( beast::role_type::client ) );
-
-        // Set a decorator to change the User-Agent of the handshake
-        ws_.set_option( websocket::stream_base::decorator( []( websocket::request_type& req ) {
-            req.set(
-                http::field::user_agent,
-                std::string( BOOST_BEAST_VERSION_STRING ) + " websocket-client-async" );
-        } ) );
-
-        // Perform the websocket handshake
-        ws_.async_handshake(
-            host_,
-            "/",
-            beast::bind_front_handler( &session::on_handshake, shared_from_this() ) );
-    }
-
-    void async_read()
-    {
-        ws_.async_read(
-            buffer_,
-            beast::bind_front_handler( &session::on_read, shared_from_this() ) );
-    }
-
-    void async_write( const std::string& msg )
-    {
-        send_msg_ = msg;
-        ws_.async_write(
-            net::buffer( send_msg_ ),
-            beast::bind_front_handler( &session::on_write, shared_from_this() ) );
-    }
-
-    void on_handshake( beast::error_code ec )
-    {
-        if ( ec )
-            return fail( ec, "handshake" );
-
-        if ( connect_callback_ )
-        {
-            connect_callback_();
-        }
-
-        async_read();
-    }
-
-    void on_write( beast::error_code ec, std::size_t bytes_transferred )
-    {
-        if ( ec )
-            return fail( ec, "write" );
-
-        std::cout << "Wrote " << bytes_transferred << " bytes\n";
-    }
-
-    void on_read( beast::error_code ec, std::size_t bytes_transferred )
-    {
-        if ( ec )
-            return fail( ec, "read" );
-
-        std::cout << "Read " << bytes_transferred << " bytes\n";
-        std::ostringstream oss;
-        oss << beast::make_printable( buffer_.data() );
-
-        if ( read_callback_ )
-        {
-            read_callback_( oss.str() );
-        }
-
-        buffer_.consume( buffer_.size() );
-
-        async_read();
-    }
-
-    void async_close()
-    {
-        // Close the WebSocket connection
-        ws_.async_close(
-            websocket::close_code::normal,
-            beast::bind_front_handler( &session::on_close, shared_from_this() ) );
-    }
-
-    void on_close( beast::error_code ec )
-    {
-        if ( ec )
-            return fail( ec, "close" );
-
-        std::cout << "Session closed\n";
-    }
+private:
+    boost::beast::websocket::stream<boost::beast::tcp_stream> m_ws;
+    boost::beast::multi_buffer m_buffer;
+    const std::string m_serverName;
+    const std::shared_ptr<MessageEngine> m_pMsgEngine;
+    boost::asio::ip::address m_peerAddress;
+    unsigned short m_peerPort;
+    std::variant<UIId, NodeId> m_peerId;
 };
+
+} // namespace sns
