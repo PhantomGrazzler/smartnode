@@ -1,7 +1,8 @@
 # smartnode
 
-[![Build Status](https://travis-ci.com/PhantomGrazzler/smartnode.svg?branch=master)](https://travis-ci.com/PhantomGrazzler/smartnode)
-[![Build status](https://ci.appveyor.com/api/projects/status/nk0elpdmaoxfgebv/branch/master?svg=true)](https://ci.appveyor.com/project/PhantomGrazzler/smartnode/branch/master)
+Linux: [![Build Status](https://travis-ci.com/PhantomGrazzler/smartnode.svg?branch=master)](https://travis-ci.com/PhantomGrazzler/smartnode)
+
+Windows: [![Build status](https://ci.appveyor.com/api/projects/status/7bfxo9u4r13vqx79/branch/master?svg=true)](https://ci.appveyor.com/project/PhantomGrazzler/smartnode/branch/master)
 
 This repository contains code for two executables: a SmartNode server and a SmartNode UI, both written in C++.
 
