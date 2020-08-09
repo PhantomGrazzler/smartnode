@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <memory>
+#include <thread>
 
 // TODO:
 //  -> Deal with failing to connect (e.g. server not running)
@@ -15,7 +16,6 @@
 //  -> Find a better way to read/populate imgui text boxes
 //  -> Make UI Id input read-only until connection completes
 //  -> Check out IP address input (https://github.com/ocornut/imgui/issues/388)
-//  -> Consider how to share common functionality between UI and server
 //  -> Add spdlog
 //  -> Add nlohmann/json
 
@@ -121,7 +121,7 @@ int main()
         ImGui::End();
 
         ImGui::Begin( "State" );
-        ImGui::TextColored( state.ConnectionColour(), state.ConnectionText().c_str() );
+        ImGui::TextColored( state.ConnectionColour(), "%s", state.ConnectionText().c_str() );
         ImGui::End();
 
         ImGui::Begin( "Connectivity" );
@@ -164,11 +164,11 @@ int main()
                     oss << R"({"MsgType": "ui_connect", "UIId": )" << uiId << '}';
                     pSession->async_write( oss.str() );
                 } );
-                pSession->register_read_callback( [&msg_out]( std::string msg ) {
+                pSession->register_read_callback( [&msg_out]( std::string readMsg ) {
                     std::size_t index = 0;
-                    while ( index < msg.size() )
+                    while ( index < readMsg.size() )
                     {
-                        msg_out[index] = msg[index];
+                        msg_out[index] = readMsg[index];
                         ++index;
                     }
                 } );
