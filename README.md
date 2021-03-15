@@ -11,8 +11,7 @@ The instructions below contain example commands for building Debug executables u
 
 1. Clone this repository: ```git clone https://github.com/PhantomGrazzler/smartnode.git```
 2. Create a build directory, _e.g._ ```mkdir build && cd build```
-3. Install dependencies: ```conan install .. -s build_type=Debug --build missing```
-4. Run the CMake configure step: ```cmake .. -DCMAKE_BUILD_TYPE=Debug```
-5. Build the server using CMake: ```cmake --build . --config Debug```
-
-*Note:* There is a known issue in boost::beast that code will not compile in Release mode when using Visual Studio (see https://github.com/boostorg/beast/issues/1582).
+3. Add bintray to your conan remotes if you do not already have it: `conan remote add bintray https://api.bintray.com/conan/bincrafters/public-conan`
+4. Install dependencies: ```conan install .. -s build_type=Debug --build missing```
+5. Run the CMake configure step: ```cmake .. -DCMAKE_BUILD_TYPE=Debug```
+6. Build using CMake: ```cmake --build . --config Debug```
