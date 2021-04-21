@@ -3,7 +3,7 @@
 #include <memory>
 #include <type_traits>
 
-namespace sns
+namespace sn
 {
 
 class Session;
@@ -16,7 +16,7 @@ template<
 class Connection final
 {
 public:
-    Connection( const T& id, std::weak_ptr<sns::Session> pSession )
+    Connection( const T& id, std::weak_ptr<sn::Session> pSession )
         : m_id( id )
         , m_pSession( std::move( pSession ) )
     {}
@@ -26,7 +26,7 @@ public:
         return m_id;
     }
 
-    const std::weak_ptr<sns::Session>& Session() const
+    const std::weak_ptr<sn::Session>& Session() const
     {
         return m_pSession;
     }
@@ -38,7 +38,7 @@ public:
 
 private:
     const T m_id;
-    const std::weak_ptr<sns::Session> m_pSession;
+    const std::weak_ptr<sn::Session> m_pSession;
 };
 
-} // namespace sns
+} // namespace sn

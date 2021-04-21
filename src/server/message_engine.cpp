@@ -7,7 +7,7 @@
 #include <set>
 #include <variant>
 
-namespace sns
+namespace sn
 {
 /*!
     @brief Builds an error message with the provided error message.
@@ -336,4 +336,4 @@ void MessageEngine::UpdateIOCache( const NodeId nodeId, const IOId ioId, const T
     }
 }
 
-} // namespace sns
+} // namespace sn

@@ -9,7 +9,7 @@
 #include <string>
 #include <map>
 
-namespace sns
+namespace sn
 {
 
 class Session;
@@ -104,4 +104,4 @@ private: // data
     std::map<NodeId, nlohmann::json> m_nodeStates;
 };
 
-} // namespace sns
+} // namespace sn
