@@ -8,7 +8,6 @@
 
 #include <set>
 #include <variant>
-#include <type_traits>
 
 namespace sn
 {
