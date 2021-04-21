@@ -9,6 +9,7 @@ target_sources(ui
 
 target_link_libraries(ui
     PRIVATE project_warnings
+
             CONAN_PKG::imgui-sfml
             CONAN_PKG::boost
     )

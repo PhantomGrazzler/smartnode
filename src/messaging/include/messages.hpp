@@ -1,3 +1,5 @@
+#pragma once
+
 #include "id_types.hpp"
 
 #include <vector>
@@ -5,6 +7,9 @@
 
 namespace sn
 {
+
+static const std::string startOfMessage = "<";
+static const std::string endOfMessage = ">";
 
 enum class MessageType : char
 {

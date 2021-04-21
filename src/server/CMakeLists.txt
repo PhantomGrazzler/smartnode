@@ -18,8 +18,8 @@ target_sources(server
 target_link_libraries(server
     PRIVATE project_warnings
             messaging
+
             CONAN_PKG::boost
-            CONAN_PKG::nlohmann_json
             CONAN_PKG::rang
             CONAN_PKG::spdlog
     )

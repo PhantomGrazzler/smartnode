@@ -90,10 +90,9 @@ ParsedMessage parse_node_update( const std::vector<std::string>& components )
     return parsedMsg;
 }
 
-void remove_framing( std::string& msg )
+std::string remove_framing( const std::string& msg )
 {
-    msg.erase( msg.find( endOfMsg ) );
-    msg.erase( msg.find( startOfMsg ) );
+    return msg.substr( 1, msg.size() - 2 );
 }
 
 ParsedMessage parse( std::string msg )
@@ -108,9 +107,14 @@ ParsedMessage parse( std::string msg )
     }
     else
     {
-        remove_framing( msg );
+        auto unframedMsg = remove_framing( msg );
         std::vector<std::string> components;
-        boost::algorithm::split( components, msg, boost::is_any_of( "_" ) );
+        boost::algorithm::split( components, unframedMsg, boost::is_any_of( "_" ) );
+
+        if ( components.empty() )
+        {
+            throw std::runtime_error( "Failed to parse message." );
+        }
 
         const auto msgType = get_message_type( components.front().front() );
 
