@@ -1,15 +1,14 @@
 #pragma once
 
 #include "connection.hpp"
-
-#include <nlohmann/json.hpp>
+#include "messages.hpp"
 
 #include <set>
 #include <memory>
 #include <string>
 #include <map>
 
-namespace sns
+namespace sn
 {
 
 class Session;
@@ -72,11 +71,6 @@ private: // methods
     void PrintConnections() const;
 
     /*!
-        @brief Builds an "all_nodes_state" message.
-     */
-    std::string BuildAllNodesState() const;
-
-    /*!
         @brief Returns true if the node with the provided ID is currently connected.
         @param[in] id The node ID to test.
      */
@@ -101,7 +95,7 @@ private: // methods
 private: // data
     std::set<Connection<UIId>> m_uiConnections;
     std::set<Connection<NodeId>> m_nodeConnections;
-    std::map<NodeId, nlohmann::json> m_nodeStates;
+    std::vector<Node> m_nodeStates;
 };
 
-} // namespace sns
+} // namespace sn

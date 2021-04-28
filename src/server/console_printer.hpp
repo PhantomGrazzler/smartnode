@@ -4,7 +4,7 @@
 
 #include <ostream>
 
-namespace sns
+namespace sn
 {
 /*!
     @brief Prints a warning message to the console.
@@ -47,4 +47,4 @@ void PrintDebug( T&&... items )
     ( ( std::cout << "[DEBUG] " ) << ... << items ) << '\n';
 }
 
-} // namespace sns
+} // namespace sn

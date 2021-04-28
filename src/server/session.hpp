@@ -19,7 +19,7 @@
 #include <memory>
 #include <variant>
 
-namespace sns
+namespace sn
 {
 
 class MessageEngine;
@@ -81,4 +81,4 @@ private:
     std::variant<UIId, NodeId> m_peerId;
 };
 
-} // namespace sns
+} // namespace sn

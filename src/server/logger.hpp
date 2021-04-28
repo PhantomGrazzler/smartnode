@@ -5,7 +5,7 @@
 
 #include <string>
 
-namespace sns
+namespace sn
 {
 const std::string loggerName( "snsLogger" );
 
@@ -17,4 +17,4 @@ void Log( spdlog::level::level_enum level, spdlog::string_view_t fmt, Args&&... 
 
 void Log( spdlog::level::level_enum level, const std::string& message );
 
-} // namespace sns
+} // namespace sn

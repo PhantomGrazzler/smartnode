@@ -19,7 +19,7 @@
 #include <memory>
 #include <string>
 
-namespace sns
+namespace sn
 {
 
 class MessageEngine;
@@ -57,4 +57,4 @@ private: // data
     const std::shared_ptr<MessageEngine> m_pMsgEngine;
 };
 
-} // namespace sns
+} // namespace sn

@@ -36,8 +36,8 @@ BOOL WINAPI CtrlHandler( DWORD fdwCtrlType )
     {
     // Handle the CTRL-C signal.
     case CTRL_C_EVENT:
-        sns::PrintInfo( exitMessage );
-        sns::Log( spdlog::level::info, exitMessage );
+        sn::PrintInfo( exitMessage );
+        sn::Log( spdlog::level::info, exitMessage );
         shouldKeepRunning.store( false, std::memory_order_relaxed );
 
         return TRUE;
@@ -58,14 +58,14 @@ int main( int argc, char* argv[] )
 #ifdef _WIN32
     if ( !InstallCtrlHandler() )
     {
-        sns::PrintError( "Failed to install Ctrl-C handler!" );
+        sn::PrintError( "Failed to install Ctrl-C handler!" );
     }
 #endif
 
     try
     {
         spdlog::rotating_logger_mt(
-            sns::loggerName,
+            sn::loggerName,
             "logs/debug.log",
             maxLogSize_bytes,
             numLogFiles,
@@ -85,7 +85,7 @@ int main( int argc, char* argv[] )
     if ( argc != 3 )
     {
         // clang-format off
-        sns::PrintInfo(
+        sn::PrintInfo(
             "Usage: ", programName, " <address> <port>\n",
             "Example:\n",
             "    ", programName, " 127.0.0.1 8080\n" );
@@ -94,7 +94,7 @@ int main( int argc, char* argv[] )
         addressStr = "127.0.0.1";
         portStr = "8080";
 
-        sns::PrintWarning( "Starting assuming server address of 127.0.0.1 and port 8080." );
+        sn::PrintWarning( "Starting assuming server address of 127.0.0.1 and port 8080." );
     }
     else
     {
@@ -108,7 +108,7 @@ int main( int argc, char* argv[] )
 
     if ( ec )
     {
-        sns::PrintError( "Failed to parse address: ", ec.message() );
+        sn::PrintError( "Failed to parse address: ", ec.message() );
         return EXIT_FAILURE;
     }
 
@@ -117,14 +117,14 @@ int main( int argc, char* argv[] )
 
     // Create and launch a listening port
     const auto pListener =
-        std::make_shared<sns::Listener>( ioc, programName, std::make_shared<sns::MessageEngine>() );
+        std::make_shared<sn::Listener>( ioc, programName, std::make_shared<sn::MessageEngine>() );
     pListener->Listen( boost::asio::ip::tcp::endpoint{ address, port } );
     pListener->Run();
 
     // Run the I/O service on a single thread (this one).
-    sns::Log( spdlog::level::debug, "Starting with address {} and port {}", addressStr, portStr );
-    sns::PrintInfo( "Starting websocket server on ", address, ':', port );
-    sns::PrintInfo( "Press CTRL+C to exit" );
+    sn::Log( spdlog::level::debug, "Starting with address {} and port {}", addressStr, portStr );
+    sn::PrintInfo( "Starting websocket server on ", address, ':', port );
+    sn::PrintInfo( "Press CTRL+C to exit" );
 
     std::thread serverThread( [&ioc]() { ioc.run(); } );
 
@@ -140,7 +140,7 @@ int main( int argc, char* argv[] )
         serverThread.join();
     }
 
-    sns::Log( spdlog::level::debug, "Exiting ", programName );
+    sn::Log( spdlog::level::debug, "Exiting ", programName );
     spdlog::drop_all();
     spdlog::shutdown();
 

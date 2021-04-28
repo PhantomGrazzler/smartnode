@@ -9,7 +9,7 @@
 
 #include <memory>
 
-namespace sns
+namespace sn
 {
 
 Listener::Listener(
@@ -95,4 +95,4 @@ void Listener::OnAccept( boost::beast::error_code ec, boost::asio::ip::tcp::sock
     DoAccept();
 }
 
-} // namespace sns
+} // namespace sn

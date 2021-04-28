@@ -6,7 +6,7 @@
 
 #include <sstream>
 
-namespace sns
+namespace sn
 {
 
 Session::Session(
@@ -133,4 +133,4 @@ void Session::OnRead( boost::beast::error_code ec, std::size_t bytes_transferred
     }
 }
 
-} // namespace sns
+} // namespace sn

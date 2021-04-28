@@ -5,8 +5,6 @@ target_sources(server
     PRIVATE main.cpp
             connection.hpp
             console_printer.hpp
-            id_types.cpp
-            id_types.hpp
             listener.cpp
             listener.hpp
             logger.cpp
@@ -19,8 +17,9 @@ target_sources(server
 
 target_link_libraries(server
     PRIVATE project_warnings
+            messaging
+
             CONAN_PKG::boost
-            CONAN_PKG::nlohmann_json
             CONAN_PKG::rang
             CONAN_PKG::spdlog
     )

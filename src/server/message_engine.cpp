@@ -3,28 +3,14 @@
 #include "id_types.hpp"
 #include "session.hpp"
 #include "logger.hpp"
+#include "parser.hpp"
+#include "message_builder.hpp"
 
 #include <set>
 #include <variant>
 
-namespace sns
+namespace sn
 {
-/*!
-    @brief Builds an error message with the provided error message.
-    @param[in] errorMsg The error message to include in the response.
- */
-std::string BuildErrorResponse( const std::string& errorMsg )
-{
-    nlohmann::json errorResp;
-
-    errorResp["MsgType"] = "error";
-    errorResp["ErrorMsg"] = errorMsg;
-
-    return errorResp.dump( 2 );
-}
-
-const auto alreadyConnectedResponse =
-    BuildErrorResponse( "Already connected with a different ID." );
 
 /*!
     @brief Removes any expired sessions from the provided container.
@@ -55,7 +41,7 @@ void RemoveDisconnectedPeer( T& container, const U id )
         if ( element.Id() == id )
         {
             container.erase( element );
-            PrintInfo( "Peer ", id, " disconnected." );
+            PrintInfo( id, " disconnected." );
             return;
         }
     }
@@ -82,9 +68,8 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
 {
     try
     {
-        const nlohmann::json msg = nlohmann::json::parse( message );
-        const auto& msgType = msg.at( "MsgType" );
-        Log( spdlog::level::debug, "Message Type is {}", msgType.dump() );
+        const auto msg = parse( message );
+        Log( spdlog::level::debug, "Message Type is {}", msg.type );
         const auto pLockedSession = pSession.lock();
 
         if ( pLockedSession == nullptr )
@@ -92,7 +77,81 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
             return;
         }
 
-        if ( msgType == "ui_connect" )
+        switch ( msg.type )
+        {
+
+        case MessageType::NodeConnect:
+        {
+            const auto nodeId = msg.node.id;
+
+            if ( PeerAlreadyConnected( pLockedSession ) )
+            {
+                pLockedSession->SendMessage( BuildNak( msg ) );
+
+                Log( spdlog::level::warn,
+                     "{} attempting to connect as {}",
+                     pLockedSession->PeerIdAsString(),
+                     nodeId );
+                PrintWarning(
+                    pLockedSession->PeerIdAsString(),
+                    " attempting to connect as ",
+                    nodeId );
+            }
+            else
+            {
+                pLockedSession->SetPeerId( nodeId );
+                AddConnection( std::move( pSession ), nodeId );
+
+                Log( spdlog::level::info, "{} connected", nodeId );
+                PrintInfo( nodeId, " connected" );
+
+                m_nodeStates.push_back( msg.node );
+
+                ForwardMessageToUIs( message );
+            }
+        }
+        break;
+
+        case MessageType::Update:
+        {
+            const auto nodeId = msg.node.id;
+            const auto ioId = msg.node.io.front().id;
+            const auto newValue = msg.node.io.front().value;
+
+            UpdateIOCache( nodeId, ioId, newValue );
+
+            Log( spdlog::level::info, "{} updated {} to {}", nodeId, ioId, newValue );
+            PrintInfo( nodeId, " updated ", ioId, " to ", newValue );
+
+            ForwardMessageToUIs( message );
+        }
+        break;
+
+        case MessageType::Ack:
+        {
+            Log( spdlog::level::debug, "{} ACK", msg.node.id );
+            PrintDebug( msg.node.id, " ACK" );
+        }
+        break;
+
+        case MessageType::Nak:
+        {
+            Log( spdlog::level::debug, "{} NAK", msg.node.id );
+            PrintDebug( msg.node.id, " NAK" );
+        }
+        break;
+
+        default:
+        {
+            Log( spdlog::level::warn, "Unknown message received: {}", message );
+            PrintWarning( "Unknown message received: ", message );
+        }
+
+        } // switch ( msg.type )
+
+        // TODO: Update to handle messages from UIs.
+        /*
+        if ( msg.type == MessageType::UiConnect )
         {
             const UIId& id = msg.at( "UIId" );
 
@@ -117,46 +176,6 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
                 pLockedSession->SendMessage( BuildAllNodesState() );
             }
         }
-        else if ( msgType == "node_connect" )
-        {
-            const NodeId& id = msg.at( "NodeId" );
-
-            if ( PeerAlreadyConnected( pLockedSession ) )
-            {
-                pLockedSession->SendMessage( alreadyConnectedResponse );
-
-                Log( spdlog::level::warn,
-                     "{} attempting to connect as {}",
-                     pLockedSession->PeerIdAsString(),
-                     id );
-                PrintWarning( pLockedSession->PeerIdAsString(), " attempting to connect as ", id );
-            }
-            else
-            {
-                pLockedSession->SetPeerId( id );
-                AddConnection( std::move( pSession ), id );
-
-                Log( spdlog::level::info, "{} connected", id );
-                PrintInfo( id, " connected" );
-
-                m_nodeStates.emplace( id, msg["Capabilities"] );
-
-                ForwardMessageToUIs( message );
-            }
-        }
-        else if ( msgType == "input_update" )
-        {
-            const NodeId nodeId = msg.at( "NodeId" );
-            const IOId ioId = msg.at( "IOId" );
-            const auto newValue = msg.at( "Value" );
-
-            UpdateIOCache( nodeId, ioId, newValue );
-
-            Log( spdlog::level::info, "{} updated {} to {}", nodeId, ioId, newValue.dump() );
-            PrintInfo( nodeId, " updated ", ioId, " to ", newValue );
-
-            ForwardMessageToUIs( msg.dump( 2 ) );
-        }
         else if ( msgType == "output_update" )
         {
             const NodeId nodeId = msg.at( "NodeId" );
@@ -177,13 +196,9 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
             SendMessageToNode( nodeId, message );
             ForwardMessageToUIs( message );
         }
-        else
-        {
-            Log( spdlog::level::warn, "Unknown message received: {}", message );
-            PrintWarning( "Unknown message received: ", message );
-        }
+        */
     }
-    catch ( const nlohmann::json::exception& e )
+    catch ( const std::runtime_error& e )
     {
         PrintWarning( "Failed to parse incoming message: ", e.what() );
         PrintDebug( "Message: \n", message );
@@ -266,26 +281,6 @@ void MessageEngine::SendMessageToNode( const NodeId nodeId, const std::string& m
     }
 }
 
-std::string MessageEngine::BuildAllNodesState() const
-{
-    nlohmann::json allNodesState;
-    allNodesState["MsgType"] = "all_nodes_state";
-    allNodesState["States"] = nlohmann::json::array();
-    auto& states = allNodesState["States"];
-
-    for ( const auto& [nodeId, nodeState] : m_nodeStates )
-    {
-        nlohmann::json nodeDescription;
-        nodeDescription["NodeId"] = nodeId;
-        nodeDescription["IsOnline"] = IsNodeConnected( nodeId );
-        nodeDescription["Capabilities"] = nodeState;
-
-        states.insert( states.begin(), nodeDescription );
-    }
-
-    return allNodesState.dump( 2 );
-}
-
 void MessageEngine::AddConnection( std::weak_ptr<Session>&& pSession, const UIId id )
 {
     RemoveExpiredSessions( m_uiConnections );
@@ -315,25 +310,21 @@ void MessageEngine::ForwardMessageToUIs( const std::string& message )
 }
 
 template<typename T>
-void MessageEngine::UpdateIOCache( const NodeId nodeId, const IOId ioId, const T value )
+void MessageEngine::UpdateIOCache( const NodeId nodeId, const IOId ioId, const T newValue )
 {
-    if ( m_nodeStates.find( nodeId ) != m_nodeStates.cend() )
+    for ( auto& node : m_nodeStates )
     {
-        auto& nodeJson = m_nodeStates.at( nodeId );
-        for ( auto& [key, io] : nodeJson.items() )
+        if ( node.id == nodeId )
         {
-            (void)key; // silence unused variable warning
-            for ( auto& [key2, ioDescription] : io.items() )
+            for ( auto& ioItem : node.io )
             {
-                (void)key2; // silence unused variable warning
-                if ( ioDescription["IOId"] == ioId )
+                if ( ioItem.id == ioId )
                 {
-                    ioDescription["Value"] = value;
-                    break;
+                    ioItem.value = newValue;
                 }
             }
         }
     }
 }
 
-} // namespace sns
+} // namespace sn
