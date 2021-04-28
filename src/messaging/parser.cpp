@@ -80,6 +80,8 @@ ParsedMessage parse_node_update( const std::vector<std::string>& components )
     ParsedMessage parsedMsg( MessageType::Update );
     parsedMsg.node.id = get_node_id( components );
 
+    // TODO: Check that there is at least one IO update in the message.
+
     for ( std::size_t segmentNum = 2; segmentNum < components.size(); segmentNum += 2 )
     {
         const auto ioId = static_cast<IOId>( std::stoi( components.at( segmentNum ) ) );

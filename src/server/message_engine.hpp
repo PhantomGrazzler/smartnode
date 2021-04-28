@@ -41,7 +41,7 @@ private: // methods
                sent a connect message (either UI or node).
         @param[in] pSession The session to test.
      */
-    bool PeerAlreadyConnected( const std::shared_ptr<Session>& pSession ) const;
+    bool PeerConnected( const std::shared_ptr<Session>& pSession ) const;
 
     /*!
         @brief Adds a new connection to one of the collections of active connections, if not already
