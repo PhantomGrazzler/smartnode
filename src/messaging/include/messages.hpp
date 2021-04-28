@@ -30,14 +30,14 @@ enum class IOType
 
 struct IO
 {
-    IO( const IOId id, const std::string& ioType, const int value )
-        : id( id )
-        , ioType( ioType )
-        , value( value )
+    IO( const IOId ioId, const std::string& ioType, const int ioValue )
+        : id( ioId )
+        , type( ioType )
+        , value( ioValue )
     {}
 
     IOId id;
-    std::string ioType; // TODO: Change this to use the enum IOType
+    std::string type; // TODO: Change this to use the enum IOType
     int value;
 };
 
