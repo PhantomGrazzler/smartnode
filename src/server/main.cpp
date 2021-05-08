@@ -27,7 +27,9 @@ constexpr auto maxLogSize_bytes = 1024 * 1024 * 5; // 5 MiB
 const auto numLogFiles = 20;
 const bool rotateOnAppStart = true;
 const std::string exitMessage( "Ctrl-C caught, exiting program." );
-std::atomic<bool> shouldKeepRunning( true );
+std::atomic<bool> shouldKeepRunning = true;
+std::mutex cvMutex;
+std::condition_variable cv;
 
 #ifdef _WIN32
 BOOL WINAPI CtrlHandler( DWORD fdwCtrlType )
@@ -38,7 +40,8 @@ BOOL WINAPI CtrlHandler( DWORD fdwCtrlType )
     case CTRL_C_EVENT:
         sn::PrintInfo( exitMessage );
         sn::Log( spdlog::level::info, exitMessage );
-        shouldKeepRunning.store( false, std::memory_order_relaxed );
+        shouldKeepRunning = false;
+        cv.notify_one();
 
         return TRUE;
 
@@ -128,9 +131,11 @@ int main( int argc, char* argv[] )
 
     std::thread serverThread( [&ioc]() { ioc.run(); } );
 
-    while ( shouldKeepRunning.load() )
+    std::unique_lock exitLock( cvMutex );
+    while ( shouldKeepRunning )
     {
         // We wait here for the user to exit.
+        cv.wait( exitLock );
     }
 
     ioc.stop();
