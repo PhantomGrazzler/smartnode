@@ -87,15 +87,10 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
             if ( PeerConnected( pLockedSession ) )
             {
                 pLockedSession->SendMessage( BuildNak( msg ) );
+                const auto peerId = pLockedSession->PeerIdAsString();
 
-                Log( spdlog::level::warn,
-                     "{} attempting to connect as {}",
-                     pLockedSession->PeerIdAsString(),
-                     nodeId );
-                PrintWarning(
-                    pLockedSession->PeerIdAsString(),
-                    " attempting to connect as ",
-                    nodeId );
+                Log( spdlog::level::warn, "{} attempting to connect as {}", peerId, nodeId );
+                PrintWarning( peerId, " attempting to connect as ", nodeId );
             }
             else if ( IsNodeConnected( nodeId ) )
             {
