@@ -17,7 +17,7 @@
 //  -> Make UI Id input read-only until connection completes
 //  -> Check out IP address input (https://github.com/ocornut/imgui/issues/388)
 //  -> Add spdlog
-//  -> Add nlohmann/json
+//  -> Use messaging lib for building and parsing
 
 constexpr auto decimalInputOptions = ImGuiInputTextFlags_::ImGuiInputTextFlags_CharsDecimal |
                                      ImGuiInputTextFlags_::ImGuiInputTextFlags_CharsNoBlank;
