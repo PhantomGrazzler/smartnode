@@ -20,6 +20,7 @@
 #include <string>
 #include <thread>
 #include <chrono>
+#include <condition_variable>
 
 //------------------------------------------------------------------------------
 const std::string programName( "smartnode-server" );
