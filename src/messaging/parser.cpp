@@ -77,6 +77,11 @@ ParsedMessage parse_node_connect( const std::vector<std::string>& components )
 
 ParsedMessage parse_node_update( const std::vector<std::string>& components )
 {
+    if ( ( components.size() - 2 ) % 3 != 0 )
+    {
+        throw std::runtime_error( "Invalid number of segments for node update message." );
+    }
+
     ParsedMessage parsedMsg( MessageType::Update );
     parsedMsg.node.id = get_node_id( components );
 

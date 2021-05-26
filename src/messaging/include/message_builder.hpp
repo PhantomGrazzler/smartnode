@@ -5,6 +5,7 @@
 namespace sn
 {
 
+std::string BuildAck( const ParsedMessage& msg );
 std::string BuildNak( const ParsedMessage& msg );
 
-}
+} // namespace sn

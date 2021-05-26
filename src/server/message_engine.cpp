@@ -58,7 +58,7 @@ bool SessionInContainer( const std::shared_ptr<Session>& pSession, const T& cont
                } ) != container.cend();
 }
 
-bool MessageEngine::PeerAlreadyConnected( const std::shared_ptr<Session>& pSession ) const
+bool MessageEngine::PeerConnected( const std::shared_ptr<Session>& pSession ) const
 {
     return SessionInContainer( pSession, m_uiConnections ) ||
            SessionInContainer( pSession, m_nodeConnections );
@@ -84,18 +84,20 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
         {
             const auto nodeId = msg.node.id;
 
-            if ( PeerAlreadyConnected( pLockedSession ) )
+            if ( PeerConnected( pLockedSession ) )
+            {
+                pLockedSession->SendMessage( BuildNak( msg ) );
+                const auto peerId = pLockedSession->PeerIdAsString();
+
+                Log( spdlog::level::warn, "{} attempting to connect as {}", peerId, nodeId );
+                PrintWarning( peerId, " attempting to connect as ", nodeId );
+            }
+            else if ( IsNodeConnected( nodeId ) )
             {
                 pLockedSession->SendMessage( BuildNak( msg ) );
 
-                Log( spdlog::level::warn,
-                     "{} attempting to connect as {}",
-                     pLockedSession->PeerIdAsString(),
-                     nodeId );
-                PrintWarning(
-                    pLockedSession->PeerIdAsString(),
-                    " attempting to connect as ",
-                    nodeId );
+                Log( spdlog::level::warn, "New Node attempting to connect as {}", nodeId );
+                PrintWarning( "New Node attempting to connect as ", nodeId );
             }
             else
             {
@@ -107,6 +109,7 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
 
                 m_nodeStates.push_back( msg.node );
 
+                pLockedSession->SendMessage( BuildAck( msg ) );
                 ForwardMessageToUIs( message );
             }
         }
@@ -114,16 +117,25 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
 
         case MessageType::Update:
         {
-            const auto nodeId = msg.node.id;
-            const auto ioId = msg.node.io.front().id;
-            const auto newValue = msg.node.io.front().value;
+            if ( PeerConnected( pLockedSession ) )
+            {
+                const auto nodeId = msg.node.id;
 
-            UpdateIOCache( nodeId, ioId, newValue );
+                for ( const auto& io : msg.node.io )
+                {
+                    UpdateIOCache( nodeId, io.id, io.value );
 
-            Log( spdlog::level::info, "{} updated {} to {}", nodeId, ioId, newValue );
-            PrintInfo( nodeId, " updated ", ioId, " to ", newValue );
+                    Log( spdlog::level::info, "{} updated {} to {}", nodeId, io.id, io.value );
+                    PrintInfo( nodeId, " updated ", io.id, " to ", io.value );
+                }
 
-            ForwardMessageToUIs( message );
+                ForwardMessageToUIs( message );
+            }
+            else
+            {
+                Log( spdlog::level::warn, "Ignoring update from unconnected peer" );
+                PrintWarning( "Ignoring update from unconnected peer" );
+            }
         }
         break;
 
@@ -155,7 +167,7 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
         {
             const UIId& id = msg.at( "UIId" );
 
-            if ( PeerAlreadyConnected( pLockedSession ) )
+            if ( PeerConnected( pLockedSession ) )
             {
                 pLockedSession->SendMessage( alreadyConnectedResponse );
 
