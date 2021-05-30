@@ -161,7 +161,7 @@ int main()
                 pSession = std::make_shared<session>( ioc );
                 pSession->register_connect_callback( [uiId, pSession]() {
                     std::ostringstream oss;
-                    oss << R"({"MsgType": "ui_connect", "UIId": )" << uiId << '}';
+                    oss << R"(<g_)" << uiId << '>';
                     pSession->async_write( oss.str() );
                 } );
                 pSession->register_read_callback( [&msg_out]( std::string readMsg ) {

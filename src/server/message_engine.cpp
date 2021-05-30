@@ -153,6 +153,37 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
         }
         break;
 
+        case MessageType::UiConnect:
+        {
+            const auto ui_id = msg.ui.id;
+
+            if ( PeerConnected( pLockedSession ) )
+            {
+                pLockedSession->SendMessage( BuildNak( msg ) );
+
+                Log( spdlog::level::warn,
+                     "{} attempting to connect as {}",
+                     pLockedSession->PeerIdAsString(),
+                     ui_id );
+                PrintWarning(
+                    pLockedSession->PeerIdAsString(),
+                    " attempting to connect as ",
+                    ui_id );
+            }
+            else
+            {
+                pLockedSession->SetPeerId( ui_id );
+                AddConnection( std::move( pSession ), ui_id );
+
+                Log( spdlog::level::info, "{} connected", ui_id );
+                PrintInfo( ui_id, " connected" );
+
+                // TODO: Build full state message.
+                // pLockedSession->SendMessage( BuildAllNodesState() );
+            }
+        }
+        break;
+
         default:
         {
             Log( spdlog::level::warn, "Unknown message received: {}", message );
@@ -163,31 +194,6 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
 
         // TODO: Update to handle messages from UIs.
         /*
-        if ( msg.type == MessageType::UiConnect )
-        {
-            const UIId& id = msg.at( "UIId" );
-
-            if ( PeerConnected( pLockedSession ) )
-            {
-                pLockedSession->SendMessage( alreadyConnectedResponse );
-
-                Log( spdlog::level::warn,
-                     "{} attempting to connect as {}",
-                     pLockedSession->PeerIdAsString(),
-                     id );
-                PrintWarning( pLockedSession->PeerIdAsString(), " attempting to connect as ", id );
-            }
-            else
-            {
-                pLockedSession->SetPeerId( id );
-                AddConnection( std::move( pSession ), id );
-
-                Log( spdlog::level::info, "{} connected", id );
-                PrintInfo( id, " connected" );
-
-                pLockedSession->SendMessage( BuildAllNodesState() );
-            }
-        }
         else if ( msgType == "output_update" )
         {
             const NodeId nodeId = msg.at( "NodeId" );

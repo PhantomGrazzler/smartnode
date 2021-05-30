@@ -31,14 +31,19 @@ MessageType get_message_type( const char msgType )
         return MessageType::Ack;
     case 'n':
         return MessageType::Nak;
+    case 'g':
+        return MessageType::UiConnect;
+    case 's':
+        return MessageType::FullState;
     default:
         throw std::runtime_error( "Invalid message type." );
     }
 }
 
-NodeId get_node_id( const std::vector<std::string>& components )
+template<typename IdType>
+IdType get_id( const std::vector<std::string>& components )
 {
-    return static_cast<NodeId>( std::stoi( components.at( 1 ) ) );
+    return static_cast<IdType>( std::stoi( components.at( 1 ) ) );
 }
 
 ParsedMessage parse_ack( const MessageType msgType, const std::vector<std::string>& components )
@@ -49,7 +54,7 @@ ParsedMessage parse_ack( const MessageType msgType, const std::vector<std::strin
     }
 
     ParsedMessage parsedMsg{ msgType };
-    parsedMsg.node.id = get_node_id( components );
+    parsedMsg.node.id = get_id<NodeId>( components );
 
     return parsedMsg;
 }
@@ -62,7 +67,12 @@ ParsedMessage parse_node_connect( const std::vector<std::string>& components )
     }
 
     ParsedMessage parsedMsg( MessageType::NodeConnect );
-    parsedMsg.node.id = get_node_id( components );
+    parsedMsg.node.id = get_id<NodeId>( components );
+
+    if ( parsedMsg.node.id == invalide_node_id )
+    {
+        throw std::runtime_error( "Invalid Node ID." );
+    }
 
     for ( std::size_t segmentNum = 2; segmentNum < components.size(); segmentNum += 3 )
     {
@@ -83,13 +93,36 @@ ParsedMessage parse_node_update( const std::vector<std::string>& components )
     }
 
     ParsedMessage parsedMsg( MessageType::Update );
-    parsedMsg.node.id = get_node_id( components );
+    parsedMsg.node.id = get_id<NodeId>( components );
+
+    if ( parsedMsg.node.id == invalide_node_id )
+    {
+        throw std::runtime_error( "Invalid Node ID." );
+    }
 
     for ( std::size_t segmentNum = 2; segmentNum < components.size(); segmentNum += 2 )
     {
         const auto ioId = static_cast<IOId>( std::stoi( components.at( segmentNum ) ) );
         const auto value = std::stoi( components.at( segmentNum + 1 ) );
         parsedMsg.node.io.emplace_back( ioId, "Existing", value );
+    }
+
+    return parsedMsg;
+}
+
+ParsedMessage parse_ui_connect( const std::vector<std::string>& components )
+{
+    if ( components.size() != 2 )
+    {
+        throw std::runtime_error( "Invalid number of segments for UI connect message." );
+    }
+
+    ParsedMessage parsedMsg( MessageType::UiConnect );
+    parsedMsg.ui.id = get_id<UIId>( components );
+
+    if ( parsedMsg.ui.id == invalid_ui_id )
+    {
+        throw std::runtime_error( "Invalid UI ID." );
     }
 
     return parsedMsg;
@@ -134,6 +167,10 @@ ParsedMessage parse( std::string msg )
         else if ( msgType == MessageType::Update )
         {
             return parse_node_update( components );
+        }
+        else if ( msgType == MessageType::UiConnect )
+        {
+            return parse_ui_connect( components );
         }
         else
         {

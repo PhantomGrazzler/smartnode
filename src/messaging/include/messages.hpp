@@ -16,7 +16,9 @@ enum class MessageType : char
     NodeConnect = 'c',
     Update = 'u',
     Ack = 'a',
-    Nak = 'n'
+    Nak = 'n',
+    UiConnect = 'g',
+    FullState = 's'
 };
 
 enum class IOType
@@ -56,11 +58,13 @@ struct ParsedMessage
 {
     ParsedMessage( const MessageType msgType )
         : type( msgType )
-        , node()
+        , node( Node{} )
+        , ui( UI{} )
     {}
 
     MessageType type;
     Node node;
+    UI ui;
 };
 
 } // namespace sn
