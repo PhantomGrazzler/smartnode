@@ -31,4 +31,9 @@ std::string BuildNak( const ParsedMessage& msg )
     }
 }
 
+std::string BuildUiConnect( const UIId id )
+{
+    return startOfMessage + "g_" + std::to_string( static_cast<uint32_t>( id ) ) + endOfMessage;
+}
+
 } // namespace sn
