@@ -2,7 +2,8 @@
 add_library(messaging)
 
 target_include_directories(messaging
-    PUBLIC  include)
+    PUBLIC  include
+)
 
 target_sources(messaging
     PRIVATE include/parser.hpp
@@ -13,10 +14,10 @@ target_sources(messaging
             parser.cpp
             id_types.cpp
             message_builder.cpp
-    )
+)
 
 target_link_libraries(messaging
     PRIVATE project_warnings
 
             CONAN_PKG::boost
-    )
+)
