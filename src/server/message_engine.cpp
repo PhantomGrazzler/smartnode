@@ -83,29 +83,30 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
         case MessageType::NodeConnect:
         {
             const auto nodeId = msg.node.id;
+            const auto nodeIdStr = to_string( nodeId );
 
             if ( PeerConnected( pLockedSession ) )
             {
                 pLockedSession->SendMessage( BuildNak( msg ) );
                 const auto peerId = pLockedSession->PeerIdAsString();
 
-                Log( spdlog::level::warn, "{} attempting to connect as {}", peerId, nodeId );
-                PrintWarning( peerId, " attempting to connect as ", nodeId );
+                Log( spdlog::level::warn, "{} attempting to connect as {}", peerId, nodeIdStr );
+                PrintWarning( peerId, " attempting to connect as ", nodeIdStr );
             }
             else if ( IsNodeConnected( nodeId ) )
             {
                 pLockedSession->SendMessage( BuildNak( msg ) );
 
-                Log( spdlog::level::warn, "New Node attempting to connect as {}", nodeId );
-                PrintWarning( "New Node attempting to connect as ", nodeId );
+                Log( spdlog::level::warn, "New Node attempting to connect as {}", nodeIdStr );
+                PrintWarning( "New Node attempting to connect as ", nodeIdStr );
             }
             else
             {
                 pLockedSession->SetPeerId( nodeId );
                 AddConnection( std::move( pSession ), nodeId );
 
-                Log( spdlog::level::info, "{} connected", nodeId );
-                PrintInfo( nodeId, " connected" );
+                Log( spdlog::level::info, "{} connected", nodeIdStr );
+                PrintInfo( nodeIdStr, " connected" );
 
                 m_nodeStates.push_back( msg.node );
 
@@ -120,13 +121,14 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
             if ( PeerConnected( pLockedSession ) )
             {
                 const auto nodeId = msg.node.id;
+                const auto nodeIdStr = to_string( nodeId );
 
                 for ( const auto& io : msg.node.io )
                 {
                     UpdateIOCache( nodeId, io.id, io.value );
 
-                    Log( spdlog::level::info, "{} updated {} to {}", nodeId, io.id, io.value );
-                    PrintInfo( nodeId, " updated ", io.id, " to ", io.value );
+                    Log( spdlog::level::info, "{} updated {} to {}", nodeIdStr, io.id, io.value );
+                    PrintInfo( nodeIdStr, " updated ", io.id, " to ", io.value );
                 }
 
                 ForwardMessageToUIs( message );
@@ -141,21 +143,24 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
 
         case MessageType::Ack:
         {
-            Log( spdlog::level::debug, "{} ACK", msg.node.id );
-            PrintDebug( msg.node.id, " ACK" );
+            const auto nodeIdStr = to_string( msg.node.id );
+            Log( spdlog::level::debug, "{} ACK", nodeIdStr );
+            PrintDebug( nodeIdStr, " ACK" );
         }
         break;
 
         case MessageType::Nak:
         {
-            Log( spdlog::level::debug, "{} NAK", msg.node.id );
-            PrintDebug( msg.node.id, " NAK" );
+            const auto nodeIdStr = to_string( msg.node.id );
+            Log( spdlog::level::debug, "{} NAK", nodeIdStr );
+            PrintDebug( nodeIdStr, " NAK" );
         }
         break;
 
         case MessageType::UiConnect:
         {
-            const auto ui_id = msg.ui.id;
+            const auto uiId = msg.ui.id;
+            const auto uiIdStr = to_string( uiId );
 
             if ( PeerConnected( pLockedSession ) )
             {
@@ -164,19 +169,19 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
                 Log( spdlog::level::warn,
                      "{} attempting to connect as {}",
                      pLockedSession->PeerIdAsString(),
-                     ui_id );
+                     uiIdStr );
                 PrintWarning(
                     pLockedSession->PeerIdAsString(),
                     " attempting to connect as ",
-                    ui_id );
+                    uiIdStr );
             }
             else
             {
-                pLockedSession->SetPeerId( ui_id );
-                AddConnection( std::move( pSession ), ui_id );
+                pLockedSession->SetPeerId( uiId );
+                AddConnection( std::move( pSession ), uiId );
 
-                Log( spdlog::level::info, "{} connected", ui_id );
-                PrintInfo( ui_id, " connected" );
+                Log( spdlog::level::info, "{} connected", uiIdStr );
+                PrintInfo( uiIdStr, " connected" );
 
                 pLockedSession->SendMessage( BuildFullState( m_nodeStates ) );
             }
@@ -250,7 +255,7 @@ void PrintContainer(
 {
     for ( const auto& item : container )
     {
-        oss << prefix << item.Id() << suffix;
+        oss << prefix << to_string( item.Id() ) << suffix;
     }
 }
 
