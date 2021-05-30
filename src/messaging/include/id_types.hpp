@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iosfwd>
+#include <string>
 
 namespace sn
 {
@@ -11,6 +12,10 @@ enum class NodeId
 {};
 enum class IOId
 {};
+
+std::string to_string( const UIId id );
+std::string to_string( const NodeId id );
+std::string to_string( const IOId id );
 
 std::ostream& operator<<( std::ostream& os, const UIId id );
 std::ostream& operator<<( std::ostream& os, const NodeId id );

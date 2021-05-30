@@ -178,8 +178,7 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
                 Log( spdlog::level::info, "{} connected", ui_id );
                 PrintInfo( ui_id, " connected" );
 
-                // TODO: Build full state message.
-                // pLockedSession->SendMessage( BuildAllNodesState() );
+                pLockedSession->SendMessage( BuildFullState( m_nodeStates ) );
             }
         }
         break;
