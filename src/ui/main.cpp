@@ -1,5 +1,6 @@
 #include "session.hpp"
 #include "message_builder.hpp"
+#include "parser.hpp"
 
 #include <imgui.h>
 #include <imgui-SFML.h>
@@ -13,12 +14,10 @@
 
 // TODO:
 //  -> Deal with failing to connect (e.g. server not running)
-//  -> Fix bug in populating server response array
 //  -> Find a better way to read/populate imgui text boxes
 //  -> Make UI Id input read-only until connection completes
 //  -> Check out IP address input (https://github.com/ocornut/imgui/issues/388)
 //  -> Add spdlog
-//  -> Use messaging lib for building and parsing
 
 constexpr auto decimalInputOptions = ImGuiInputTextFlags_::ImGuiInputTextFlags_CharsDecimal |
                                      ImGuiInputTextFlags_::ImGuiInputTextFlags_CharsNoBlank;
@@ -27,7 +26,7 @@ constexpr auto textOutputOptions = ImGuiInputTextFlags_::ImGuiInputTextFlags_Rea
 const ImVec4 red( 1, 0, 0, 1 );
 const ImVec4 green( 0, 1, 0, 1 );
 
-class UIState
+class ConnectionState
 {
 public:
     bool IsConnected() const
@@ -65,16 +64,34 @@ private:
     std::string connectionText = "Disconnected";
 };
 
+class NodeStates
+{
+private:
+public:
+    std::vector<sn::Node> m_nodes; // TODO: Make this private
+
+    void Reset()
+    {
+        m_nodes.clear();
+    }
+
+    void SetNodeStates( const std::vector<sn::Node>& nodes )
+    {
+        m_nodes = nodes;
+    }
+};
+
 int main()
 {
-    UIState state;
+    ConnectionState connection_state;
+    NodeStates node_states;
 
     boost::asio::io_context ioc;
     auto work_guard = boost::asio::make_work_guard( ioc );
     std::thread commsThread( [&ioc]() { ioc.run(); } );
     std::shared_ptr<session> pSession;
 
-    sf::RenderWindow window( sf::VideoMode( 800, 600 ), "SmartNodeUI" );
+    sf::RenderWindow window( sf::VideoMode( 1024, 768 ), "SmartNodeUI" );
     window.setFramerateLimit( 60 );
     ImGui::SFML::Init( window );
     sf::Clock deltaClock;
@@ -122,7 +139,10 @@ int main()
         ImGui::End();
 
         ImGui::Begin( "State" );
-        ImGui::TextColored( state.ConnectionColour(), "%s", state.ConnectionText().c_str() );
+        ImGui::TextColored(
+            connection_state.ConnectionColour(),
+            "%s",
+            connection_state.ConnectionText().c_str() );
         ImGui::End();
 
         ImGui::Begin( "Connectivity" );
@@ -149,7 +169,7 @@ int main()
             "%d",
             decimalInputOptions );
 
-        if ( !state.IsConnected() )
+        if ( !connection_state.IsConnected() )
         {
             if ( ImGui::Button( "Connect" ) )
             {
@@ -163,17 +183,31 @@ int main()
                 pSession->register_connect_callback( [uiId, pSession]() {
                     pSession->async_write( sn::BuildUiConnect( static_cast<sn::UIId>( uiId ) ) );
                 } );
-                pSession->register_read_callback( [&msg_out]( std::string readMsg ) {
+                pSession->register_read_callback( [&msg_out, &node_states]( std::string readMsg ) {
                     std::size_t index = 0;
                     while ( index < readMsg.size() )
                     {
                         msg_out[index] = readMsg[index];
                         ++index;
                     }
+                    msg_out[index] = '\0';
+
+                    try
+                    {
+                        const auto parsedMsg = sn::parse_ui_message( readMsg );
+                        if ( parsedMsg.type == sn::MessageType::FullState )
+                        {
+                            node_states.SetNodeStates( parsedMsg.nodes );
+                        }
+                    }
+                    catch ( const std::exception& e )
+                    {
+                        std::cout << "Failed to parse incoming message: " << e.what() << '\n';
+                    }
                 } );
                 pSession->run( ipAddress.str(), std::to_string( port ) );
 
-                state.Connected();
+                connection_state.Connected();
             }
         }
         else
@@ -183,7 +217,8 @@ int main()
                 pSession->async_close();
                 std::cout << "Disconnect\n";
 
-                state.Disconnected();
+                connection_state.Disconnected();
+                node_states.Reset();
             }
         }
 
@@ -196,7 +231,7 @@ int main()
             { 250, 200 },
             textInputOptions );
 
-        if ( state.IsConnected() )
+        if ( connection_state.IsConnected() )
         {
             ImGui::SameLine();
             if ( ImGui::Button( "Send Message" ) )
@@ -215,6 +250,22 @@ int main()
             textOutputOptions );
 
         ImGui::End();
+
+        for ( const auto& node : node_states.m_nodes )
+        {
+            ImGui::Begin( sn::to_string( node.id ).c_str() );
+
+            for ( const auto& io : node.io )
+            {
+                std::ostringstream oss;
+                oss << io.type << ' ' << io.id;
+                ImGui::Text( oss.str().c_str() );
+                ImGui::SameLine();
+                ImGui::Text( "Value: %d", io.value );
+            }
+
+            ImGui::End();
+        }
 
         window.clear();
         ImGui::SFML::Render( window );

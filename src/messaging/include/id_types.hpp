@@ -22,7 +22,7 @@ std::ostream& operator<<( std::ostream& os, const NodeId id );
 std::ostream& operator<<( std::ostream& os, const IOId id );
 
 const UIId invalid_ui_id = UIId{};
-const NodeId invalide_node_id = NodeId{};
+const NodeId invalid_node_id = NodeId{};
 const IOId invalid_io_id = IOId{};
 
 } // namespace sn

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "id_types.hpp"
+#include "data_types.hpp"
 
-#include <vector>
 #include <string>
 
 namespace sn
@@ -21,39 +21,6 @@ enum class MessageType : char
     FullState = 's'
 };
 
-enum class IOType
-{
-    DigitalInput,
-    DigitalOutput,
-    AnalogueInput,
-    AnalogueOutput,
-    Existing
-};
-
-struct IO
-{
-    IO( const IOId ioId, const std::string& ioType, const int ioValue )
-        : id( ioId )
-        , type( ioType )
-        , value( ioValue )
-    {}
-
-    IOId id;
-    std::string type; // TODO: Change this to use the enum IOType
-    int value;
-};
-
-struct Node
-{
-    NodeId id;
-    std::vector<IO> io;
-};
-
-struct UI
-{
-    UIId id;
-};
-
 struct ParsedMessage
 {
     ParsedMessage( const MessageType msgType )
@@ -65,6 +32,12 @@ struct ParsedMessage
     MessageType type;
     Node node;
     UI ui;
+};
+
+struct ParsedUiMessage
+{
+    MessageType type;
+    std::vector<Node> nodes;
 };
 
 } // namespace sn

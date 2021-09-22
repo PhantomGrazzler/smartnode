@@ -17,6 +17,8 @@ target_sources(messaging
 )
 
 target_link_libraries(messaging
+    PUBLIC  data_model
+
     PRIVATE project_warnings
 
             CONAN_PKG::boost
