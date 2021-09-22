@@ -190,6 +190,7 @@ int main()
                         msg_out[index] = readMsg[index];
                         ++index;
                     }
+                    msg_out[index] = '\0';
 
                     try
                     {

@@ -14,6 +14,7 @@ namespace sn
 const char startOfMsg = '<';
 const char endOfMsg = '>';
 const std::size_t minMsgSize = 5;
+const std::size_t minUiMsgSize = 4;
 const std::regex msgTypeRegex( R"(<(\w)_.*>)" );
 const std::regex fullStateRegex( R"(<s(_n_\d+(_(\w{2})_(\d+)_(\d+))*)+>)" );
 const std::regex nodeRegex( R"(n_(\d+)((_\w{2}_\d+_\d+)*))" );
@@ -260,7 +261,7 @@ ParsedUiMessage parse_full_state( const std::string& msg )
 
 ParsedUiMessage parse_ui_message( std::string msg )
 {
-    if ( msg.size() < minMsgSize )
+    if ( msg.size() < minUiMsgSize )
     {
         throw std::runtime_error( "Message is too short." );
     }
