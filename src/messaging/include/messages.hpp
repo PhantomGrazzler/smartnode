@@ -18,7 +18,8 @@ enum class MessageType : char
     Ack = 'a',
     Nak = 'n',
     UiConnect = 'g',
-    FullState = 's'
+    FullState = 's',
+    NodeDisconnect = 'd'
 };
 
 struct ParsedMessage

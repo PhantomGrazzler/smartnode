@@ -68,20 +68,25 @@ class NodeStates
 {
 private:
     std::vector<sn::Node> m_nodes;
+    std::mutex m_mutex;
 
 public:
     void Reset()
     {
+        std::lock_guard l( m_mutex );
         m_nodes.clear();
     }
 
     void SetNodeStates( const std::vector<sn::Node>& nodes )
     {
+        std::lock_guard l( m_mutex );
         m_nodes = nodes;
     }
 
     void NodeConnected( const sn::Node& node )
     {
+        std::lock_guard l( m_mutex );
+
         auto nodeIter =
             std::find_if( begin( m_nodes ), end( m_nodes ), [node]( const auto& existingNode ) {
                 return node.id == existingNode.id;
@@ -97,8 +102,25 @@ public:
         }
     }
 
+    void NodeDisconnected( const sn::Node& node )
+    {
+        std::lock_guard l( m_mutex );
+
+        auto nodeIter =
+            std::find_if( begin( m_nodes ), end( m_nodes ), [node]( const auto& existingNode ) {
+                return node.id == existingNode.id;
+            } );
+
+        if ( nodeIter != end( m_nodes ) )
+        {
+            m_nodes.erase( nodeIter );
+        }
+    }
+
     void DrawNodes()
     {
+        std::lock_guard l( m_mutex );
+
         for ( const auto& node : m_nodes )
         {
             ImGui::Begin( sn::to_string( node.id ).c_str() );
@@ -238,6 +260,10 @@ int main()
                         else if ( parsedMsg.type == sn::MessageType::NodeConnect )
                         {
                             node_states.NodeConnected( parsedMsg.nodes.front() );
+                        }
+                        else if ( parsedMsg.type == sn::MessageType::NodeDisconnect )
+                        {
+                            node_states.NodeDisconnected( parsedMsg.nodes.front() );
                         }
                     }
                     catch ( const std::exception& e )

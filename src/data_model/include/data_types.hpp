@@ -35,6 +35,11 @@ struct Node
         , io()
     {}
 
+    Node( const NodeId& nodeId )
+        : id( nodeId )
+        , io()
+    {}
+
     Node( const NodeId& nodeId, const std::vector<IO>& ios )
         : id( nodeId )
         , io( ios )
