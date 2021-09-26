@@ -67,9 +67,9 @@ private:
 class NodeStates
 {
 private:
-public:
-    std::vector<sn::Node> m_nodes; // TODO: Make this private
+    std::vector<sn::Node> m_nodes;
 
+public:
     void Reset()
     {
         m_nodes.clear();
@@ -78,6 +78,42 @@ public:
     void SetNodeStates( const std::vector<sn::Node>& nodes )
     {
         m_nodes = nodes;
+    }
+
+    void NodeConnected( const sn::Node& node )
+    {
+        auto nodeIter =
+            std::find_if( begin( m_nodes ), end( m_nodes ), [node]( const auto& existingNode ) {
+                return node.id == existingNode.id;
+            } );
+
+        if ( nodeIter == end( m_nodes ) )
+        {
+            m_nodes.push_back( node );
+        }
+        else
+        {
+            *nodeIter = node;
+        }
+    }
+
+    void DrawNodes()
+    {
+        for ( const auto& node : m_nodes )
+        {
+            ImGui::Begin( sn::to_string( node.id ).c_str() );
+
+            for ( const auto& io : node.io )
+            {
+                std::ostringstream oss;
+                oss << io.type << ' ' << io.id;
+                ImGui::Text( oss.str().c_str() );
+                ImGui::SameLine();
+                ImGui::Text( "Value: %d", io.value );
+            }
+
+            ImGui::End();
+        }
     }
 };
 
@@ -199,6 +235,10 @@ int main()
                         {
                             node_states.SetNodeStates( parsedMsg.nodes );
                         }
+                        else if ( parsedMsg.type == sn::MessageType::NodeConnect )
+                        {
+                            node_states.NodeConnected( parsedMsg.nodes.front() );
+                        }
                     }
                     catch ( const std::exception& e )
                     {
@@ -251,21 +291,7 @@ int main()
 
         ImGui::End();
 
-        for ( const auto& node : node_states.m_nodes )
-        {
-            ImGui::Begin( sn::to_string( node.id ).c_str() );
-
-            for ( const auto& io : node.io )
-            {
-                std::ostringstream oss;
-                oss << io.type << ' ' << io.id;
-                ImGui::Text( oss.str().c_str() );
-                ImGui::SameLine();
-                ImGui::Text( "Value: %d", io.value );
-            }
-
-            ImGui::End();
-        }
+        node_states.DrawNodes();
 
         window.clear();
         ImGui::SFML::Render( window );

@@ -259,6 +259,42 @@ ParsedUiMessage parse_full_state( const std::string& msg )
     }
 }
 
+ParsedUiMessage parse_node_connect( const std::string& msg )
+{
+    auto unframedMsg = remove_framing( msg );
+    std::vector<std::string> components;
+    boost::algorithm::split( components, unframedMsg, boost::is_any_of( "_" ) );
+
+    if ( components.empty() )
+    {
+        throw std::runtime_error( "Failed to parse message." );
+    }
+    else if ( ( components.size() - 2 ) % 3 != 0 )
+    {
+        throw std::runtime_error( "Invalid number of segments for node connect message." );
+    }
+
+    ParsedUiMessage parsedMsg{ MessageType::NodeConnect };
+    Node node = Node();
+    node.id = get_id<NodeId>( components );
+
+    if ( node.id == invalid_node_id )
+    {
+        throw std::runtime_error( "Invalid Node ID." );
+    }
+
+    for ( std::size_t segmentNum = 2; segmentNum < components.size(); segmentNum += 3 )
+    {
+        const auto& ioType = components.at( segmentNum );
+        const auto ioId = static_cast<IOId>( std::stoi( components.at( segmentNum + 1 ) ) );
+        const auto value = std::stoi( components.at( segmentNum + 2 ) );
+        node.io.emplace_back( ioId, ioType, value );
+    }
+
+    parsedMsg.nodes.push_back( node );
+    return parsedMsg;
+}
+
 ParsedUiMessage parse_ui_message( std::string msg )
 {
     if ( msg.size() < minUiMsgSize )
@@ -276,6 +312,10 @@ ParsedUiMessage parse_ui_message( std::string msg )
         if ( msgType == MessageType::FullState )
         {
             return parse_full_state( msg );
+        }
+        else if ( msgType == MessageType::NodeConnect )
+        {
+            return parse_node_connect( msg );
         }
         else
         {
