@@ -56,4 +56,9 @@ std::string BuildFullState( const std::vector<Node>& nodes )
     return oss.str();
 }
 
+std::string BuildNodeDisconnect( const NodeId id )
+{
+    return startOfMessage + "d_" + std::to_string( static_cast<uint32_t>( id ) ) + endOfMessage;
+}
+
 } // namespace sn

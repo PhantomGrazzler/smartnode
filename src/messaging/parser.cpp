@@ -47,6 +47,8 @@ MessageType get_message_type( const std::string& msg )
             return MessageType::UiConnect;
         case 's':
             return MessageType::FullState;
+        case 'd':
+            return MessageType::NodeDisconnect;
         default:
             throw std::runtime_error( "Invalid message type: " + std::to_string( msg_type ) );
         }
@@ -295,6 +297,20 @@ ParsedUiMessage parse_node_connect( const std::string& msg )
     return parsedMsg;
 }
 
+ParsedUiMessage parse_node_disconnect( const std::string& msg )
+{
+    auto unframedMsg = remove_framing( msg );
+    std::vector<std::string> components;
+    boost::algorithm::split( components, unframedMsg, boost::is_any_of( "_" ) );
+
+    if ( components.empty() )
+    {
+        throw std::runtime_error( "Failed to parse message." );
+    }
+
+    return { MessageType::NodeDisconnect, { Node{ get_id<NodeId>( components ) } } };
+}
+
 ParsedUiMessage parse_ui_message( std::string msg )
 {
     if ( msg.size() < minUiMsgSize )
@@ -316,6 +332,10 @@ ParsedUiMessage parse_ui_message( std::string msg )
         else if ( msgType == MessageType::NodeConnect )
         {
             return parse_node_connect( msg );
+        }
+        else if ( msgType == MessageType::NodeDisconnect )
+        {
+            return parse_node_disconnect( msg );
         }
         else
         {

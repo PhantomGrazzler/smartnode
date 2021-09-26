@@ -86,6 +86,12 @@ private: // methods
     void UpdateIOCache( const NodeId nodeId, const IOId ioId, const T value );
 
     /*!
+        @brief Removes the specified Node from the local cache.
+        @param[in] nodeId The node to remove from local cache.
+     */
+    void RemoveNodeFromCache( const NodeId nodeId );
+
+    /*!
         @brief Sends a message to the specified node.
         @param[in] nodeId The node to which the message should be sent.
         @param[in] message The message to send.

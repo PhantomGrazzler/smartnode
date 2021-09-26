@@ -243,6 +243,9 @@ void MessageEngine::PeerDisconnected( std::weak_ptr<Session>&& pSession )
         {
             const auto id = std::get<NodeId>( peerId );
             RemoveDisconnectedPeer( m_nodeConnections, id );
+            RemoveNodeFromCache( id );
+
+            ForwardMessageToUIs( BuildNodeDisconnect( id ) );
         }
     }
 
@@ -346,6 +349,19 @@ void MessageEngine::UpdateIOCache( const NodeId nodeId, const IOId ioId, const T
                 }
             }
         }
+    }
+}
+
+void MessageEngine::RemoveNodeFromCache( const NodeId nodeId )
+{
+    auto nodeIter = std::find_if(
+        begin( m_nodeStates ),
+        end( m_nodeStates ),
+        [nodeId]( const auto& existingNode ) { return nodeId == existingNode.id; } );
+
+    if ( nodeIter != end( m_nodeStates ) )
+    {
+        m_nodeStates.erase( nodeIter );
     }
 }
 
