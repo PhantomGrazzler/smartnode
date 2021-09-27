@@ -23,6 +23,30 @@ struct IO
         , value( ioValue )
     {}
 
+    IO( const IO& other )
+    {
+        id = other.id;
+        value = other.value;
+
+        if ( type != "Existing" )
+        {
+            type = other.type;
+        }
+    }
+
+    IO& operator=( IO rhs )
+    {
+        id = rhs.id;
+        value = rhs.value;
+
+        if ( rhs.type != "Existing" )
+        {
+            type = rhs.type;
+        }
+
+        return *this;
+    }
+
     IOId id;
     std::string type; // TODO: Change this to use the enum IOType
     int value;
