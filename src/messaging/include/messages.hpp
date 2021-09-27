@@ -14,7 +14,7 @@ static const std::string endOfMessage = ">";
 enum class MessageType : char
 {
     NodeConnect = 'c',
-    Update = 'u',
+    NodeUpdate = 'u',
     Ack = 'a',
     Nak = 'n',
     UiConnect = 'g',

@@ -116,7 +116,7 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
         }
         break;
 
-        case MessageType::Update:
+        case MessageType::NodeUpdate:
         {
             if ( PeerConnected( pLockedSession ) )
             {
@@ -220,7 +220,7 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
         }
         */
     }
-    catch ( const std::runtime_error& e )
+    catch ( const std::exception& e )
     {
         PrintWarning( "Failed to parse incoming message: ", e.what() );
         PrintDebug( "Message: \n", message );

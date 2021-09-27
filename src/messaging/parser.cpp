@@ -38,7 +38,7 @@ MessageType get_message_type( const std::string& msg )
         case 'c':
             return MessageType::NodeConnect;
         case 'u':
-            return MessageType::Update;
+            return MessageType::NodeUpdate;
         case 'a':
             return MessageType::Ack;
         case 'n':
@@ -106,12 +106,12 @@ ParsedMessage parse_node_connect( const std::vector<std::string>& components )
 
 ParsedMessage parse_node_update( const std::vector<std::string>& components )
 {
-    if ( ( components.size() - 2 ) % 3 != 0 )
+    if ( ( components.size() - 2 ) % 2 != 0 )
     {
         throw std::runtime_error( "Invalid number of segments for node update message." );
     }
 
-    ParsedMessage parsedMsg( MessageType::Update );
+    ParsedMessage parsedMsg( MessageType::NodeUpdate );
     parsedMsg.node.id = get_id<NodeId>( components );
 
     if ( parsedMsg.node.id == invalid_node_id )
@@ -182,7 +182,7 @@ ParsedMessage parse( std::string msg )
         {
             return parse_node_connect( components );
         }
-        else if ( msgType == MessageType::Update )
+        else if ( msgType == MessageType::NodeUpdate )
         {
             return parse_node_update( components );
         }
@@ -311,6 +311,21 @@ ParsedUiMessage parse_node_disconnect( const std::string& msg )
     return { MessageType::NodeDisconnect, { Node{ get_id<NodeId>( components ) } } };
 }
 
+ParsedUiMessage parse_node_update_for_ui( const std::string& msg )
+{
+    auto unframedMsg = remove_framing( msg );
+    std::vector<std::string> components;
+    boost::algorithm::split( components, unframedMsg, boost::is_any_of( "_" ) );
+
+    if ( components.empty() )
+    {
+        throw std::runtime_error( "Failed to parse message." );
+    }
+
+    const auto parsedNodeMsg = parse_node_update( components );
+    return { MessageType::NodeUpdate, { parsedNodeMsg.node } };
+}
+
 ParsedUiMessage parse_ui_message( std::string msg )
 {
     if ( msg.size() < minUiMsgSize )
@@ -336,6 +351,10 @@ ParsedUiMessage parse_ui_message( std::string msg )
         else if ( msgType == MessageType::NodeDisconnect )
         {
             return parse_node_disconnect( msg );
+        }
+        else if ( msgType == MessageType::NodeUpdate )
+        {
+            return parse_node_update_for_ui( msg );
         }
         else
         {

@@ -117,6 +117,42 @@ public:
         }
     }
 
+    void NodeUpdated( const sn::Node& node )
+    {
+        std::lock_guard l( m_mutex );
+
+        auto nodeIter =
+            std::find_if( begin( m_nodes ), end( m_nodes ), [node]( const auto& existingNode ) {
+                return node.id == existingNode.id;
+            } );
+
+        if ( nodeIter != end( m_nodes ) )
+        {
+            for ( const auto& io : node.io )
+            {
+                const auto& existingIoBegin = begin( ( *nodeIter ).io );
+                const auto& existingIoEnd = end( ( *nodeIter ).io );
+                auto existingIoIter =
+                    std::find_if( existingIoBegin, existingIoEnd, [io]( const auto& existingIo ) {
+                        return io.id == existingIo.id;
+                    } );
+
+                if ( existingIoIter != existingIoEnd )
+                {
+                    *existingIoIter = io;
+                }
+                else
+                {
+                    std::cout << "Update for unknown IO " << io.id << '\n';
+                }
+            }
+        }
+        else
+        {
+            std::cout << "Update for unknown Node " << node.id << '\n';
+        }
+    }
+
     void DrawNodes()
     {
         std::lock_guard l( m_mutex );
@@ -264,6 +300,10 @@ int main()
                         else if ( parsedMsg.type == sn::MessageType::NodeDisconnect )
                         {
                             node_states.NodeDisconnected( parsedMsg.nodes.front() );
+                        }
+                        else if ( parsedMsg.type == sn::MessageType::NodeUpdate )
+                        {
+                            node_states.NodeUpdated( parsedMsg.nodes.front() );
                         }
                     }
                     catch ( const std::exception& e )

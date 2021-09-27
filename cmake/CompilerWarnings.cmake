@@ -6,12 +6,10 @@ function(set_project_warnings project_name)
 
   set(MSVC_WARNINGS
         /MP                     # Enable multi-processor compilation
+        /permissive-            # Enforce standards conformance
 
-        /experimental:external  # Enable external compiler options
         /external:anglebrackets # Treat all headers included via angle brackets as external headers
         /external:W0            # Turn off warnings for external headers
-
-        /permissive-            # Enforce standards conformance
 
         /W4     # Enable warning level 4
         /w14242 # 'identifier': conversion from 'type1' to 'type2', possible loss of data
