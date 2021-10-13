@@ -26,6 +26,9 @@ constexpr auto textOutputOptions = ImGuiInputTextFlags_::ImGuiInputTextFlags_Rea
 const ImVec4 red( 1, 0, 0, 1 );
 const ImVec4 green( 0, 1, 0, 1 );
 
+const sf::Color sf_red( 255, 0, 0 );
+const sf::Color sf_green( 0, 255, 0 );
+
 class ConnectionState
 {
 public:
@@ -156,6 +159,8 @@ public:
     void DrawNodes()
     {
         std::lock_guard l( m_mutex );
+        const auto font_size = ImGui::GetFontSize();
+        const sf::FloatRect float_rect( 0.0, 0.0, font_size, font_size );
 
         for ( const auto& node : m_nodes )
         {
@@ -168,6 +173,28 @@ public:
                 ImGui::Text( oss.str().c_str() );
                 ImGui::SameLine();
                 ImGui::Text( "Value: %d", io.value );
+
+                if ( io.type == "di" || io.type == "do" )
+                {
+                    ImGui::SameLine();
+
+                    if ( io.value == 0 )
+                    {
+                        ImGui::DrawRectFilled( float_rect, sf_red );
+                    }
+                    else
+                    {
+                        ImGui::DrawRectFilled( float_rect, sf_green );
+                    }
+
+                    ImGui::NewLine();
+                }
+                else if ( io.type == "ai" || io.type == "ao" )
+                {
+                    ImGui::SameLine();
+                    const auto value = std::to_string( io.value );
+                    ImGui::ProgressBar( io.value / 255.0, ImVec2( -1, 0 ), value.c_str() );
+                }
             }
 
             ImGui::End();
