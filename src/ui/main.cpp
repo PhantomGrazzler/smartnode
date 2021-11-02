@@ -23,6 +23,7 @@ constexpr auto decimalInputOptions = ImGuiInputTextFlags_::ImGuiInputTextFlags_C
                                      ImGuiInputTextFlags_::ImGuiInputTextFlags_CharsNoBlank;
 constexpr auto textInputOptions = ImGuiInputTextFlags_::ImGuiInputTextFlags_AlwaysInsertMode;
 constexpr auto textOutputOptions = ImGuiInputTextFlags_::ImGuiInputTextFlags_ReadOnly;
+constexpr auto clampSlider = ImGuiSliderFlags_::ImGuiSliderFlags_AlwaysClamp;
 const ImVec4 red( 1, 0, 0, 1 );
 const ImVec4 green( 0, 1, 0, 1 );
 
@@ -156,45 +157,73 @@ public:
         }
     }
 
-    void DrawNodes()
+    void DrawNodes( const std::shared_ptr<session>& pSession )
     {
         std::lock_guard l( m_mutex );
         const auto font_size = ImGui::GetFontSize();
         const sf::FloatRect float_rect( 0.0, 0.0, font_size, font_size );
 
-        for ( const auto& node : m_nodes )
+        for ( auto& node : m_nodes )
         {
+            std::vector<sn::IO> ios_to_update;
             ImGui::Begin( sn::to_string( node.id ).c_str() );
 
-            for ( const auto& io : node.io )
+            for ( auto& io : node.io )
             {
                 std::ostringstream oss;
                 oss << io.type << ' ' << io.id;
                 ImGui::Text( oss.str().c_str() );
                 ImGui::SameLine();
                 ImGui::Text( "Value: %d", io.value );
+                ImGui::SameLine();
 
-                if ( io.type == "di" || io.type == "do" )
+                if ( io.type == "di" )
                 {
-                    ImGui::SameLine();
-
-                    if ( io.value == 0 )
-                    {
-                        ImGui::DrawRectFilled( float_rect, sf_red );
-                    }
-                    else
-                    {
-                        ImGui::DrawRectFilled( float_rect, sf_green );
-                    }
+                    io.value == 0 ? ImGui::DrawRectFilled( float_rect, sf_red )
+                                  : ImGui::DrawRectFilled( float_rect, sf_green );
 
                     ImGui::NewLine();
                 }
-                else if ( io.type == "ai" || io.type == "ao" )
+                else if ( io.type == "do" )
                 {
+                    std::string doLabel = io.value == 0 ? "Turn on" : "Turn off";
+                    doLabel.append( "##" + to_string( io.id ) );
+                    if ( ImGui::Button( doLabel.c_str(), { 75, 20 } ) )
+                    {
+                        io.value = io.value == 0 ? 1 : 0;
+                        ios_to_update.emplace_back( io );
+                    }
                     ImGui::SameLine();
+                    io.value == 0 ? ImGui::DrawRectFilled( float_rect, sf_red )
+                                  : ImGui::DrawRectFilled( float_rect, sf_green );
+
+                    ImGui::NewLine();
+                }
+                else if ( io.type == "ai" )
+                {
                     const auto value = std::to_string( io.value );
                     ImGui::ProgressBar( io.value / 255.0, ImVec2( -1, 0 ), value.c_str() );
                 }
+                else if ( io.type == "ao" )
+                {
+                    std::string sliderLabel = "##" + to_string( io.id );
+                    if ( ImGui::SliderInt(
+                             sliderLabel.c_str(),
+                             &( io.value ),
+                             0,
+                             255,
+                             "%d",
+                             clampSlider ) )
+                    {
+                        ios_to_update.emplace_back( io );
+                    }
+                }
+            }
+
+            if ( pSession && !ios_to_update.empty() )
+            {
+                const auto nodeUpdateMsg = sn::BuildUpdateMessage( node.id, ios_to_update );
+                pSession->async_write( nodeUpdateMsg );
             }
 
             ImGui::End();
@@ -384,7 +413,7 @@ int main()
 
         ImGui::End();
 
-        node_states.DrawNodes();
+        node_states.DrawNodes( pSession );
 
         window.clear();
         ImGui::SFML::Render( window );
