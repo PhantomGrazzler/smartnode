@@ -6,6 +6,12 @@
 namespace sn
 {
 
+enum class PeerType
+{
+    Node,
+    UI
+};
+
 enum class IOType
 {
     DigitalInput,

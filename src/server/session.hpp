@@ -25,6 +25,7 @@ namespace sn
 class MessageEngine;
 enum class UIId;
 enum class NodeId;
+enum class PeerType;
 
 class Session final : public std::enable_shared_from_this<Session>
 {
@@ -63,6 +64,11 @@ public:
         @brief Returns the ID of the remote peer as a string.
      */
     std::string PeerIdAsString() const;
+
+    /*!
+        @brief Returns the type of peer.
+     */
+    PeerType GetPeerType() const;
 
 private:
     void OnAccept( boost::beast::error_code ec );

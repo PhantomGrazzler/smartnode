@@ -68,9 +68,9 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
 {
     try
     {
-        const auto msg = parse( message );
-        Log( spdlog::level::debug, "Message Type is {}", msg.type );
         const auto pLockedSession = pSession.lock();
+        const auto msg = parse( message, pLockedSession->GetPeerType() );
+        Log( spdlog::level::debug, "Message Type is {}", msg.type );
 
         if ( pLockedSession == nullptr )
         {
@@ -123,6 +123,9 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
                 const auto nodeId = msg.node.id;
                 const auto nodeIdStr = to_string( nodeId );
 
+                // TODO: Check that IO exists on the Node.
+                // TODO: Check that each updated IO is an input.
+
                 for ( const auto& io : msg.node.io )
                 {
                     UpdateIOCache( nodeId, io.id, io.value );
@@ -135,8 +138,8 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
             }
             else
             {
-                Log( spdlog::level::warn, "Ignoring update from unconnected peer" );
-                PrintWarning( "Ignoring update from unconnected peer" );
+                Log( spdlog::level::warn, "Ignoring update from non-connected peer" );
+                PrintWarning( "Ignoring update from non-connected peer" );
             }
         }
         break;
@@ -188,6 +191,34 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
         }
         break;
 
+        case MessageType::UiUpdate:
+        {
+            const auto nodeId = msg.node.id;
+            const auto nodeIdStr = to_string( nodeId );
+            const auto uiId = pLockedSession->PeerIdAsString();
+
+            for ( const auto& io : msg.node.io )
+            {
+                UpdateIOCache( nodeId, io.id, io.value );
+
+                Log( spdlog::level::info,
+                     "{} updated {} to {} on {}",
+                     uiId,
+                     io.id,
+                     io.value,
+                     nodeIdStr );
+                PrintInfo( uiId, " updated ", io.id, " to ", io.value, " on ", nodeIdStr );
+            }
+
+            SendMessageToNode( nodeId, message );
+
+            // TODO: Do not send the message back to the UI that originally sent it.
+            // TODO: Check that IO exists on the Node.
+            // TODO: Check that each IO is an output.
+            // ForwardMessageToUIs( message );
+        }
+        break;
+
         default:
         {
             Log( spdlog::level::warn, "Unknown message received: {}", message );
@@ -195,30 +226,6 @@ void MessageEngine::MessageReceived( std::weak_ptr<Session>&& pSession, const st
         }
 
         } // switch ( msg.type )
-
-        // TODO: Update to handle messages from UIs.
-        /*
-        else if ( msgType == "output_update" )
-        {
-            const NodeId nodeId = msg.at( "NodeId" );
-            const IOId ioId = msg.at( "IOId" );
-            const auto newValue = msg.at( "Value" );
-
-            UpdateIOCache( nodeId, ioId, newValue );
-
-            const auto uiId = pLockedSession->PeerIdAsString();
-            Log( spdlog::level::info,
-                 "{} updated {} to {} on {}",
-                 uiId,
-                 ioId,
-                 newValue.dump(),
-                 nodeId );
-            PrintDebug( uiId, " updated ", ioId, " to ", newValue, " on ", nodeId );
-
-            SendMessageToNode( nodeId, message );
-            ForwardMessageToUIs( message );
-        }
-        */
     }
     catch ( const std::exception& e )
     {
