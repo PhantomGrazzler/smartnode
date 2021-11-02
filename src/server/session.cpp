@@ -3,6 +3,7 @@
 #include "message_engine.hpp"
 #include "id_types.hpp"
 #include "logger.hpp"
+#include "data_types.hpp"
 
 #include <sstream>
 
@@ -76,6 +77,18 @@ std::string Session::PeerIdAsString() const
     else
     {
         return "[No peer ID set]";
+    }
+}
+
+PeerType Session::GetPeerType() const
+{
+    if ( std::holds_alternative<UIId>( m_peerId ) )
+    {
+        return PeerType::UI;
+    }
+    else
+    {
+        return PeerType::Node;
     }
 }
 

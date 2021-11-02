@@ -26,7 +26,7 @@ bool is_message_framed( const std::string& msg )
     return msg.front() == startOfMsg && msg.back() == endOfMsg;
 }
 
-MessageType get_message_type( const std::string& msg )
+MessageType get_message_type( const std::string& msg, const PeerType peerType )
 {
     std::smatch msg_type_match;
 
@@ -38,7 +38,16 @@ MessageType get_message_type( const std::string& msg )
         case 'c':
             return MessageType::NodeConnect;
         case 'u':
-            return MessageType::NodeUpdate;
+        {
+            if ( peerType == PeerType::Node )
+            {
+                return MessageType::NodeUpdate;
+            }
+            else
+            {
+                return MessageType::UiUpdate;
+            }
+        }
         case 'a':
             return MessageType::Ack;
         case 'n':
@@ -104,14 +113,14 @@ ParsedMessage parse_node_connect( const std::vector<std::string>& components )
     return parsedMsg;
 }
 
-ParsedMessage parse_node_update( const std::vector<std::string>& components )
+ParsedMessage parse_update( const MessageType msgType, const std::vector<std::string>& components )
 {
     if ( ( components.size() - 2 ) % 2 != 0 )
     {
         throw std::runtime_error( "Invalid number of segments for node update message." );
     }
 
-    ParsedMessage parsedMsg( MessageType::NodeUpdate );
+    ParsedMessage parsedMsg( msgType );
     parsedMsg.node.id = get_id<NodeId>( components );
 
     if ( parsedMsg.node.id == invalid_node_id )
@@ -152,7 +161,7 @@ std::string remove_framing( const std::string& msg )
     return msg.substr( 1, msg.size() - 2 );
 }
 
-ParsedMessage parse( std::string msg )
+ParsedMessage parse( std::string msg, const PeerType peerType )
 {
     if ( msg.size() < minMsgSize )
     {
@@ -164,7 +173,7 @@ ParsedMessage parse( std::string msg )
     }
     else
     {
-        const auto msgType = get_message_type( msg );
+        const auto msgType = get_message_type( msg, peerType );
         auto unframedMsg = remove_framing( msg );
         std::vector<std::string> components;
         boost::algorithm::split( components, unframedMsg, boost::is_any_of( "_" ) );
@@ -174,24 +183,26 @@ ParsedMessage parse( std::string msg )
             throw std::runtime_error( "Failed to parse message." );
         }
 
-        if ( msgType == MessageType::Ack || msgType == MessageType::Nak )
+        switch ( msgType )
         {
+        case MessageType::Ack:
+        case MessageType::Nak:
             return parse_ack( msgType, components );
-        }
-        else if ( msgType == MessageType::NodeConnect )
-        {
+            break;
+
+        case MessageType::NodeConnect:
             return parse_node_connect( components );
-        }
-        else if ( msgType == MessageType::NodeUpdate )
-        {
-            return parse_node_update( components );
-        }
-        else if ( msgType == MessageType::UiConnect )
-        {
+            break;
+
+        case MessageType::NodeUpdate:
+        case MessageType::UiUpdate:
+            return parse_update( msgType, components );
+            break;
+
+        case MessageType::UiConnect:
             return parse_ui_connect( components );
-        }
-        else
-        {
+
+        default:
             throw std::runtime_error( "Unhandled message type encountered." );
         }
     }
@@ -322,7 +333,7 @@ ParsedUiMessage parse_node_update_for_ui( const std::string& msg )
         throw std::runtime_error( "Failed to parse message." );
     }
 
-    const auto parsedNodeMsg = parse_node_update( components );
+    const auto parsedNodeMsg = parse_update( MessageType::NodeUpdate, components );
     return { MessageType::NodeUpdate, { parsedNodeMsg.node } };
 }
 
@@ -338,7 +349,7 @@ ParsedUiMessage parse_ui_message( std::string msg )
     }
     else
     {
-        const auto msgType = get_message_type( msg );
+        const auto msgType = get_message_type( msg, PeerType::Node );
 
         if ( msgType == MessageType::FullState )
         {
