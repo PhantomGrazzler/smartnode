@@ -1,7 +1,5 @@
 # smartnode
 
-Windows: [![Build status](https://ci.appveyor.com/api/projects/status/7bfxo9u4r13vqx79/branch/master?svg=true)](https://ci.appveyor.com/project/PhantomGrazzler/smartnode/branch/master)
-
 This repository contains code for two executables: a SmartNode server and a SmartNode UI, both written in C++.
 
 ## Building
