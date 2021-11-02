@@ -61,4 +61,18 @@ std::string BuildNodeDisconnect( const NodeId id )
     return startOfMessage + "d_" + std::to_string( static_cast<uint32_t>( id ) ) + endOfMessage;
 }
 
+std::string BuildUpdateMessage( const NodeId id, std::vector<IO> ios )
+{
+    std::ostringstream oss;
+    oss << startOfMessage << "u_" << id;
+
+    for ( const auto& io : ios )
+    {
+        oss << '_' << io.id << '_' << io.value;
+    }
+
+    oss << endOfMessage;
+    return oss.str();
+}
+
 } // namespace sn
